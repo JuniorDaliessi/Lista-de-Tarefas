@@ -19,10 +19,11 @@ const SidebarContainer = styled.div<{ isOpen: boolean, isMobile: boolean }>`
   padding: 1.5rem 0;
   position: fixed;
   top: 0;
-  left: ${props => props.isOpen ? '0' : '-280px'};
-  box-shadow: var(--shadow-md);
+  left: ${props => props.isOpen ? '0' : '-300px'};
+  box-shadow: ${props => props.isOpen ? 'var(--shadow-md)' : 'none'};
   transition: left var(--transition-normal), box-shadow var(--transition-normal);
   overflow-y: auto;
+  overflow-x: hidden;
   z-index: 200;
   display: flex;
   flex-direction: column;
@@ -44,6 +45,8 @@ const SidebarContainer = styled.div<{ isOpen: boolean, isMobile: boolean }>`
     width: 85%;
     max-width: 320px;
     padding-top: 1rem;
+    transform: ${props => props.isOpen ? 'translateX(0)' : 'translateX(-100%)'};
+    left: 0;
   }
 `;
 

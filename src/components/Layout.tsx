@@ -9,6 +9,7 @@ const LayoutContainer = styled.div`
   display: flex;
   min-height: 100vh;
   position: relative;
+  overflow-x: hidden;
 `;
 
 const MainContent = styled.div<{ isSidebarOpen: boolean }>`
@@ -17,10 +18,12 @@ const MainContent = styled.div<{ isSidebarOpen: boolean }>`
   padding: 2rem;
   background-color: var(--background-primary);
   transition: margin-left var(--transition-normal);
+  min-height: 100vh;
   
   @media (max-width: 768px) {
     margin-left: 0;
     padding: 1rem;
+    width: 100%;
   }
 `;
 
@@ -32,6 +35,8 @@ const MobileHeader = styled.div`
   background-color: var(--background-secondary);
   position: sticky;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
   box-shadow: var(--shadow-sm);
   
@@ -96,8 +101,12 @@ const Overlay = styled.div<{ isVisible: boolean }>`
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
   z-index: 150;
-  display: ${props => props.isVisible ? 'block' : 'none'};
+  opacity: ${props => props.isVisible ? 1 : 0};
+  visibility: ${props => props.isVisible ? 'visible' : 'hidden'};
+  transition: opacity var(--transition-normal), visibility var(--transition-normal);
+  cursor: pointer;
   
   @media (min-width: 769px) {
     display: none;
@@ -108,6 +117,18 @@ const Layout: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
+  useEffect(() => {
+    if (isMobile && isSidebarOpen) {
+      document.body.classList.add('sidebar-open');
+    } else {
+      document.body.classList.remove('sidebar-open');
+    }
+    
+    return () => {
+      document.body.classList.remove('sidebar-open');
+    };
+  }, [isMobile, isSidebarOpen]);
   
   useEffect(() => {
     const handleResize = () => {

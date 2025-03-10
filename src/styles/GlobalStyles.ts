@@ -77,6 +77,19 @@ export const GlobalStyles = createGlobalStyle`
     color: var(--text-primary);
     transition: background-color var(--transition-normal), color var(--transition-normal);
     line-height: 1.6;
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+    
+    /* Prevenir scroll quando o sidebar estiver aberto no mobile */
+    &.sidebar-open {
+      @media (max-width: 768px) {
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+      }
+    }
   }
 
   a {
