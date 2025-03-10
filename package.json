@@ -1,9 +1,6 @@
 {
   "name": "todo-app",
   "version": "0.1.0",
-  "homepage":"htts://JuniorDaliessi.github.io/Lista-de-Tarefas",
-  "predeploy":"npm run build",
-  "deploy":"gh-pages -d Dist",
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
