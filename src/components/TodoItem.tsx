@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, memo, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { FaEdit, FaTrash, FaCheck, FaTag, FaClock, FaRegCalendarAlt } from 'react-icons/fa';
 import { Todo } from '../types/Todo';
@@ -13,13 +13,14 @@ interface TodoContainerProps {
   priority: 'baixa' | 'média' | 'alta';
 }
 
-const TodoContainer = styled.div<TodoContainerProps>`
+const TodoContainer = styled.div<TodoContainerProps & { isCompleting?: boolean; isDeleting?: boolean }>`
   background-color: var(--card-background);
   border-radius: var(--radius-md);
   padding: 1.2rem;
   margin-bottom: 1.2rem;
   box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), 
+              opacity var(--transition-normal), border-left-color var(--transition-normal);
   animation: slideUp var(--transition-normal);
   border-left: 4px solid ${props => {
     switch(props.priority) {
@@ -30,6 +31,14 @@ const TodoContainer = styled.div<TodoContainerProps>`
     }
   }};
   
+  ${props => props.isCompleting && `
+    animation: completeTodo 0.5s ease-in-out;
+  `}
+  
+  ${props => props.isDeleting && `
+    animation: deleteTodo 0.3s ease-in-out forwards;
+  `}
+  
   &:hover {
     transform: translateY(-3px);
     box-shadow: var(--shadow-md);
@@ -37,6 +46,30 @@ const TodoContainer = styled.div<TodoContainerProps>`
   
   @media (max-width: 768px) {
     padding: 1rem;
+  }
+  
+  @keyframes completeTodo {
+    0% {
+      background-color: var(--card-background);
+    }
+    50% {
+      background-color: var(--success-color);
+      opacity: 0.8;
+    }
+    100% {
+      background-color: var(--card-background);
+    }
+  }
+  
+  @keyframes deleteTodo {
+    0% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(100px);
+      opacity: 0;
+    }
   }
 `;
 
@@ -191,10 +224,29 @@ const ActionButton = styled.button`
   }
 `;
 
-const CheckButton = styled(ActionButton)<{ completed: boolean }>`
-  color: ${(props) => (props.completed ? 'var(--success-color)' : 'var(--text-secondary)')};
+const CheckButton = styled.button<{ completed: boolean }>`
+  background-color: ${props => props.completed ? 'var(--success-color)' : 'transparent'};
+  color: ${props => props.completed ? 'white' : 'var(--text-secondary)'};
+  border: ${props => props.completed ? 'none' : '2px solid var(--border-color)'};
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  
   &:hover {
-    color: var(--success-color);
+    background-color: ${props => props.completed ? 'var(--success-color)' : 'var(--hover-background)'};
+    border-color: var(--accent-color);
+    transform: scale(1.1);
+  }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 134, 247, 0.3);
   }
 `;
 
@@ -270,15 +322,36 @@ const getTimeAgo = (dateString: string): string => {
 const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
   const { toggleTodoCompletion, deleteTodo } = useTodo();
   const [isEditing, setIsEditing] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const itemRef = useRef<HTMLDivElement>(null);
+  
+  // Efeito para animar quando a tarefa é completada
+  useEffect(() => {
+    if (isCompleting) {
+      const timer = setTimeout(() => {
+        setIsCompleting(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isCompleting]);
 
   // Memoizando os handlers com useCallback
   const handleToggleComplete = useCallback(() => {
-    toggleTodoCompletion(todo.id);
+    setIsCompleting(true);
+    // Atraso para permitir que a animação seja vista antes da atualização do estado
+    setTimeout(() => {
+      toggleTodoCompletion(todo.id);
+    }, 300);
   }, [toggleTodoCompletion, todo.id]);
 
   const handleDelete = useCallback(() => {
     if (window.confirm('Tem certeza que deseja excluir esta tarefa?')) {
-      deleteTodo(todo.id);
+      setIsDeleting(true);
+      // Atraso para permitir que a animação seja vista antes da remoção
+      setTimeout(() => {
+        deleteTodo(todo.id);
+      }, 300);
     }
   }, [deleteTodo, todo.id]);
 
@@ -286,28 +359,65 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
     setIsEditing(value);
   }, []);
 
+  // Navegação por teclado
+  const handleKeyDown = useCallback((e: React.KeyboardEvent, action: () => void) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      action();
+    }
+  }, []);
+
   if (isEditing) {
     return <TodoForm editTodo={todo} onCancel={() => handleSetEditing(false)} />;
   }
 
   return (
-    <TodoContainer priority={todo.priority}>
+    <TodoContainer 
+      priority={todo.priority} 
+      isCompleting={isCompleting}
+      isDeleting={isDeleting}
+      ref={itemRef}
+      role="article"
+      aria-label={`Tarefa: ${todo.title}`}
+    >
       <TodoHeader>
         <TodoTitleWrapper>
-          <TodoTitle completed={todo.completed}>{todo.title}</TodoTitle>
+          <TodoTitle 
+            completed={todo.completed}
+            aria-checked={todo.completed}
+          >
+            {todo.title}
+          </TodoTitle>
         </TodoTitleWrapper>
         <ActionButtons>
           <CheckButton
             completed={todo.completed}
             onClick={handleToggleComplete}
             title={todo.completed ? 'Marcar como pendente' : 'Marcar como concluída'}
+            aria-label={todo.completed ? 'Marcar como pendente' : 'Marcar como concluída'}
+            role="checkbox"
+            aria-checked={todo.completed}
+            onKeyDown={(e) => handleKeyDown(e, handleToggleComplete)}
+            tabIndex={0}
           >
             <FaCheck />
           </CheckButton>
-          <EditButton onClick={() => handleSetEditing(true)} title="Editar tarefa">
+          <EditButton 
+            onClick={() => handleSetEditing(true)} 
+            title="Editar tarefa"
+            aria-label="Editar tarefa"
+            onKeyDown={(e) => handleKeyDown(e, () => handleSetEditing(true))}
+            tabIndex={0}
+          >
             <FaEdit />
           </EditButton>
-          <DeleteButton onClick={handleDelete} title="Excluir tarefa">
+          <DeleteButton 
+            onClick={handleDelete} 
+            title="Excluir tarefa"
+            aria-label="Excluir tarefa"
+            onKeyDown={(e) => handleKeyDown(e, handleDelete)}
+            tabIndex={0}
+          >
             <FaTrash />
           </DeleteButton>
         </ActionButtons>
@@ -322,13 +432,13 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
       <TodoMeta>
         {todo.date && (
           <TodoMetaItem>
-            <FaRegCalendarAlt />
+            <FaRegCalendarAlt aria-hidden="true" />
             <span>{formatDate(todo.date)}</span>
           </TodoMetaItem>
         )}
         
         <TodoMetaItem>
-          <FaClock />
+          <FaClock aria-hidden="true" />
           <span>Criado {getTimeAgo(todo.createdAt)}</span>
         </TodoMetaItem>
         
@@ -341,14 +451,17 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
         {todo.category && (
           <TodoMetaItem>
             <CategoryBadge>
-              <FaTag size={10} />
+              <FaTag size={10} aria-hidden="true" />
               {todo.category}
             </CategoryBadge>
           </TodoMetaItem>
         )}
       </TodoMeta>
       
-      <CompletionStatus completed={todo.completed}>
+      <CompletionStatus 
+        completed={todo.completed}
+        aria-live="polite"
+      >
         {todo.completed ? 'Tarefa concluída' : 'Tarefa pendente'}
       </CompletionStatus>
     </TodoContainer>

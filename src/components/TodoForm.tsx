@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
 import styled from 'styled-components';
-import { FaPlus, FaSave, FaTimes, FaRegCalendarAlt, FaFlag, FaTags } from 'react-icons/fa';
+import { FaPlus, FaSave, FaTimes, FaRegCalendarAlt, FaFlag, FaTags, FaCheck } from 'react-icons/fa';
 import { Todo } from '../types/Todo';
 import { useTodo } from '../contexts/TodoContext';
 
@@ -219,6 +219,33 @@ const Button = styled.button`
   }
 `;
 
+const SuccessMessage = styled.div`
+  background-color: var(--success-color);
+  color: white;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: slideDown 0.3s ease-in-out;
+  
+  svg {
+    margin-right: 0.5rem;
+  }
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
 const SubmitButton = styled(Button)`
   background-color: var(--accent-color);
   color: white;
@@ -230,6 +257,17 @@ const SubmitButton = styled(Button)`
   &:active {
     background-color: var(--accent-dark);
   }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 134, 247, 0.3);
+  }
+  
+  &:disabled {
+    background-color: var(--border-color);
+    cursor: not-allowed;
+    transform: none !important;
+  }
 `;
 
 const CancelButton = styled(Button)`
@@ -239,6 +277,11 @@ const CancelButton = styled(Button)`
   
   &:hover {
     background-color: var(--hover-background);
+  }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 134, 247, 0.3);
   }
 `;
 
@@ -250,6 +293,11 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
   const [priority, setPriority] = useState<'baixa' | 'média' | 'alta'>('média');
   const [category, setCategory] = useState('');
   const [newCategory, setNewCategory] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const formRef = useRef<HTMLFormElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   
   // Preencher o formulário se estiver editando uma tarefa existente
   useEffect(() => {
@@ -260,7 +308,22 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
       setPriority(editTodo.priority);
       setCategory(editTodo.category || '');
     }
+    
+    // Focar no campo de título ao montar o componente
+    if (titleInputRef.current) {
+      titleInputRef.current.focus();
+    }
   }, [editTodo]);
+
+  // Esconder mensagem de sucesso após alguns segundos
+  useEffect(() => {
+    if (showSuccess) {
+      const timer = setTimeout(() => {
+        setShowSuccess(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccess]);
 
   // Memoização dos manipuladores de eventos
   const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -298,44 +361,85 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
     
     // Validação básica
     if (!title.trim()) {
-      alert('Por favor, insira um título para a tarefa');
+      setErrorMsg('Por favor, insira um título para a tarefa');
+      if (titleInputRef.current) {
+        titleInputRef.current.focus();
+      }
       return;
     }
 
-    // Usar a nova categoria se selecionada
-    const finalCategory = category === 'nova' ? newCategory.trim() : category;
+    setIsSubmitting(true);
 
-    const todoData = {
-      title,
-      description,
-      date: date || new Date().toISOString().slice(0, 10),
-      priority,
-      category: finalCategory,
-      completed: editTodo ? editTodo.completed : false,
-    };
+    try {
+      // Usar a nova categoria se selecionada
+      const finalCategory = category === 'nova' ? newCategory.trim() : category;
 
-    if (editTodo) {
-      updateTodo({ ...todoData, id: editTodo.id, createdAt: editTodo.createdAt });
-    } else {
-      addTodo(todoData);
+      const todoData = {
+        title,
+        description,
+        date: date || new Date().toISOString().slice(0, 10),
+        priority,
+        category: finalCategory,
+        completed: editTodo ? editTodo.completed : false,
+      };
+
+      if (editTodo) {
+        updateTodo({ ...todoData, id: editTodo.id, createdAt: editTodo.createdAt });
+      } else {
+        addTodo(todoData);
+      }
+
+      // Mostrar mensagem de sucesso
+      setShowSuccess(true);
+      
+      // Resetar o formulário se não estiver editando
+      if (!editTodo) {
+        resetForm();
+        if (titleInputRef.current) {
+          titleInputRef.current.focus();
+        }
+      } else if (onCancel) {
+        // Se estiver editando, fechar o modo de edição após um delay
+        setTimeout(() => {
+          onCancel();
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar tarefa:', error);
+      setErrorMsg('Ocorreu um erro ao salvar a tarefa. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Resetar o formulário
-    resetForm();
-    
-    // Se estiver editando, chamar onCancel para fechar o modo de edição
-    if (onCancel) onCancel();
   }, [title, description, date, priority, category, newCategory, editTodo, addTodo, updateTodo, resetForm, onCancel]);
 
   return (
-    <FormContainer onSubmit={handleSubmit}>
-      <FormTitle>
-        {editTodo ? <FaSave /> : <FaPlus />}
+    <FormContainer onSubmit={handleSubmit} ref={formRef} aria-labelledby="form-title">
+      <FormTitle id="form-title">
+        {editTodo ? <FaSave aria-hidden="true" /> : <FaPlus aria-hidden="true" />}
         {editTodo ? 'Editar Tarefa' : 'Nova Tarefa'}
       </FormTitle>
+      
+      {showSuccess && (
+        <SuccessMessage role="status" aria-live="polite">
+          <span>
+            <FaCheck aria-hidden="true" />
+            {editTodo ? 'Tarefa atualizada com sucesso!' : 'Tarefa adicionada com sucesso!'}
+          </span>
+        </SuccessMessage>
+      )}
+      
+      {errorMsg && (
+        <SuccessMessage 
+          role="alert" 
+          style={{ backgroundColor: 'var(--error-color)' }}
+        >
+          {errorMsg}
+        </SuccessMessage>
+      )}
       
       <FormGroup>
         <Label htmlFor="title">Título</Label>
@@ -346,7 +450,9 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
           onChange={handleTitleChange}
           placeholder="Adicione um título"
           required
-          autoFocus
+          ref={titleInputRef}
+          aria-required="true"
+          aria-invalid={errorMsg && !title ? "true" : "false"}
         />
       </FormGroup>
 
@@ -357,13 +463,14 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
           value={description}
           onChange={handleDescriptionChange}
           placeholder="Adicione uma descrição (opcional)"
+          aria-required="false"
         />
       </FormGroup>
 
       <FormRow>
         <FormGroup>
           <Label htmlFor="date">
-            <FaRegCalendarAlt />
+            <FaRegCalendarAlt aria-hidden="true" />
             Data
           </Label>
           <Input
@@ -371,18 +478,20 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
             type="date"
             value={date}
             onChange={handleDateChange}
+            aria-label="Data de conclusão da tarefa"
           />
         </FormGroup>
 
         <FormGroup>
           <Label htmlFor="priority">
-            <FaFlag />
+            <FaFlag aria-hidden="true" />
             Prioridade
           </Label>
           <Select
             id="priority"
             value={priority}
             onChange={handlePriorityChange}
+            aria-label="Selecione a prioridade da tarefa"
           >
             <option value="baixa">Baixa</option>
             <option value="média">Média</option>
@@ -393,13 +502,14 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
 
       <FormGroup>
         <Label htmlFor="category">
-          <FaTags />
+          <FaTags aria-hidden="true" />
           Categoria
         </Label>
         <Select
           id="category"
           value={category}
           onChange={handleCategoryChange}
+          aria-label="Selecione a categoria da tarefa"
         >
           <option value="">Sem categoria</option>
           {categories.map((cat) => (
@@ -421,20 +531,35 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
             onChange={handleNewCategoryChange}
             placeholder="Digite o nome da nova categoria"
             required
+            aria-required="true"
+            aria-invalid={category === 'nova' && !newCategory ? "true" : "false"}
           />
         </FormGroup>
       )}
 
       <ButtonGroup>
         {onCancel && (
-          <CancelButton type="button" onClick={onCancel}>
-            <FaTimes />
+          <CancelButton 
+            type="button" 
+            onClick={onCancel}
+            aria-label="Cancelar edição"
+          >
+            <FaTimes aria-hidden="true" />
             Cancelar
           </CancelButton>
         )}
-        <SubmitButton type="submit">
-          {editTodo ? <FaSave /> : <FaPlus />}
-          {editTodo ? 'Atualizar Tarefa' : 'Adicionar Tarefa'}
+        <SubmitButton 
+          type="submit"
+          disabled={isSubmitting}
+          aria-busy={isSubmitting}
+        >
+          {editTodo ? <FaSave aria-hidden="true" /> : <FaPlus aria-hidden="true" />}
+          {isSubmitting 
+            ? 'Salvando...' 
+            : editTodo 
+              ? 'Atualizar Tarefa' 
+              : 'Adicionar Tarefa'
+          }
         </SubmitButton>
       </ButtonGroup>
     </FormContainer>

@@ -190,4 +190,93 @@ export const GlobalStyles = createGlobalStyle`
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
   }
+
+  /* Estilos para o modo offline */
+  body.offline-mode {
+    position: relative;
+  }
+  
+  body.offline-mode::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background-color: var(--warning-color);
+    z-index: 10000;
+  }
+  
+  #offline-message {
+    animation: slideUp 0.3s ease;
+  }
+  
+  /* Animações adicionais para feedbacks táteis e visuais */
+  @keyframes success-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+    }
+  }
+  
+  @keyframes pending-pulse {
+    0% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  
+  .item-success {
+    animation: success-pulse 1.5s ease-in-out;
+  }
+  
+  .item-pending {
+    animation: pending-pulse 1.5s infinite ease-in-out;
+  }
+  
+  /* Melhorias de contraste para acessibilidade */
+  @media (prefers-contrast: high) {
+    :root {
+      --text-primary: #000000;
+      --text-secondary: #333333;
+      --border-color: rgba(0, 0, 0, 0.3);
+      --accent-color: #0056b3;
+      --accent-light: #0066cc;
+      --accent-dark: #004494;
+    }
+    
+    [data-theme='dark'] {
+      --text-primary: #ffffff;
+      --text-secondary: #cccccc;
+      --border-color: rgba(255, 255, 255, 0.5);
+      --accent-color: #4d94ff;
+      --accent-light: #66a3ff;
+      --accent-dark: #3385ff;
+    }
+  }
+  
+  /* Melhorias para navegação por teclado */
+  :focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+  }
+  
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+  
+  :focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+  }
 `; 
