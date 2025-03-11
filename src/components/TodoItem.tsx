@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import styled from 'styled-components';
 import { FaEdit, FaTrash, FaCheck, FaTag, FaClock, FaRegCalendarAlt } from 'react-icons/fa';
 import { Todo } from '../types/Todo';
@@ -271,18 +271,23 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
   const { toggleTodoCompletion, deleteTodo } = useTodo();
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleToggleComplete = () => {
+  // Memoizando os handlers com useCallback
+  const handleToggleComplete = useCallback(() => {
     toggleTodoCompletion(todo.id);
-  };
+  }, [toggleTodoCompletion, todo.id]);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     if (window.confirm('Tem certeza que deseja excluir esta tarefa?')) {
       deleteTodo(todo.id);
     }
-  };
+  }, [deleteTodo, todo.id]);
+
+  const handleSetEditing = useCallback((value: boolean) => {
+    setIsEditing(value);
+  }, []);
 
   if (isEditing) {
-    return <TodoForm editTodo={todo} onCancel={() => setIsEditing(false)} />;
+    return <TodoForm editTodo={todo} onCancel={() => handleSetEditing(false)} />;
   }
 
   return (
@@ -299,7 +304,7 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
           >
             <FaCheck />
           </CheckButton>
-          <EditButton onClick={() => setIsEditing(true)} title="Editar tarefa">
+          <EditButton onClick={() => handleSetEditing(true)} title="Editar tarefa">
             <FaEdit />
           </EditButton>
           <DeleteButton onClick={handleDelete} title="Excluir tarefa">
@@ -350,4 +355,5 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
   );
 };
 
-export default TodoItem; 
+// Exportando com memo para evitar re-renderizações desnecessárias
+export default memo(TodoItem); 

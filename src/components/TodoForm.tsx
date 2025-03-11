@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import styled from 'styled-components';
 import { FaPlus, FaSave, FaTimes, FaRegCalendarAlt, FaFlag, FaTags } from 'react-icons/fa';
 import { Todo } from '../types/Todo';
@@ -262,7 +262,41 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
     }
   }, [editTodo]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Memoização dos manipuladores de eventos
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value);
+  }, []);
+
+  const handleDescriptionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDescription(e.target.value);
+  }, []);
+
+  const handleDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setDate(e.target.value);
+  }, []);
+
+  const handlePriorityChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPriority(e.target.value as 'baixa' | 'média' | 'alta');
+  }, []);
+
+  const handleCategoryChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setCategory(e.target.value);
+  }, []);
+
+  const handleNewCategoryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewCategory(e.target.value);
+  }, []);
+
+  const resetForm = useCallback(() => {
+    setTitle('');
+    setDescription('');
+    setDate('');
+    setPriority('média');
+    setCategory('');
+    setNewCategory('');
+  }, []);
+
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     
     // Validação básica
@@ -294,16 +328,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
     
     // Se estiver editando, chamar onCancel para fechar o modo de edição
     if (onCancel) onCancel();
-  };
-
-  const resetForm = () => {
-    setTitle('');
-    setDescription('');
-    setDate('');
-    setPriority('média');
-    setCategory('');
-    setNewCategory('');
-  };
+  }, [title, description, date, priority, category, newCategory, editTodo, addTodo, updateTodo, resetForm, onCancel]);
 
   return (
     <FormContainer onSubmit={handleSubmit}>
@@ -318,7 +343,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
           id="title"
           type="text"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={handleTitleChange}
           placeholder="Adicione um título"
           required
           autoFocus
@@ -330,7 +355,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
         <TextArea
           id="description"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={handleDescriptionChange}
           placeholder="Adicione uma descrição (opcional)"
         />
       </FormGroup>
@@ -345,7 +370,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
             id="date"
             type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            onChange={handleDateChange}
           />
         </FormGroup>
 
@@ -357,7 +382,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
           <Select
             id="priority"
             value={priority}
-            onChange={(e) => setPriority(e.target.value as 'baixa' | 'média' | 'alta')}
+            onChange={handlePriorityChange}
           >
             <option value="baixa">Baixa</option>
             <option value="média">Média</option>
@@ -374,7 +399,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
         <Select
           id="category"
           value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          onChange={handleCategoryChange}
         >
           <option value="">Sem categoria</option>
           {categories.map((cat) => (
@@ -393,7 +418,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
             id="newCategory"
             type="text"
             value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
+            onChange={handleNewCategoryChange}
             placeholder="Digite o nome da nova categoria"
             required
           />
@@ -416,4 +441,4 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
   );
 };
 
-export default TodoForm; 
+export default memo(TodoForm); 

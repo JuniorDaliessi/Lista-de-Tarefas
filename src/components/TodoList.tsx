@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo, useCallback, memo } from 'react';
 import styled from 'styled-components';
 import { FaSort, FaFilter, FaSearch, FaListUl, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import { useTodo } from '../contexts/TodoContext';
 import TodoItem from './TodoItem';
+import { FixedSizeList as List } from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer';
 
 const ListContainer = styled.div`
   margin-top: 1.5rem;
@@ -121,19 +123,15 @@ const Select = styled.select`
 `;
 
 const TodoListItems = styled.div`
-  & > div:last-child {
-    margin-bottom: 0;
-  }
+  height: 600px;
+  width: 100%;
   
-  & > div {
-    opacity: 0;
-    animation: slideUp var(--transition-normal) forwards;
-    
-    @for $i from 1 through 20 {
-      &:nth-child(#{$i}) {
-        animation-delay: #{$i * 0.05}s;
-      }
-    }
+  @media (max-width: 768px) {
+    height: 500px;
+  }
+
+  @media (max-width: 480px) {
+    height: 400px;
   }
 `;
 
@@ -173,10 +171,13 @@ const EmptyMessage = styled.div`
   }
 `;
 
+// Altura média estimada de cada item de tarefa
+const ITEM_SIZE = 180;
+
 const TodoList: React.FC = () => {
   const { filteredTodos, filter, setFilter, sortBy, setSortBy, searchQuery } = useTodo();
 
-  const getListTitle = () => {
+  const getListTitle = useCallback(() => {
     if (searchQuery) {
       return `Resultados da busca "${searchQuery}"`;
     }
@@ -189,9 +190,9 @@ const TodoList: React.FC = () => {
       default:
         return 'Todas as Tarefas';
     }
-  };
+  }, [filter, searchQuery]);
   
-  const getEmptyIcon = () => {
+  const getEmptyIcon = useCallback(() => {
     if (searchQuery) {
       return <FaSearch />;
     }
@@ -204,9 +205,9 @@ const TodoList: React.FC = () => {
       default:
         return <FaListUl />;
     }
-  };
+  }, [filter, searchQuery]);
   
-  const getEmptyMessage = () => {
+  const getEmptyMessage = useCallback(() => {
     if (searchQuery) {
       return `Nenhuma tarefa encontrada para "${searchQuery}".`;
     }
@@ -219,13 +220,32 @@ const TodoList: React.FC = () => {
       default:
         return 'Nenhuma tarefa encontrada. Adicione uma nova tarefa!';
     }
-  };
+  }, [filter, searchQuery]);
+
+  const handleFilterChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilter(e.target.value);
+  }, [setFilter]);
+
+  const handleSortChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortBy(e.target.value);
+  }, [setSortBy]);
+
+  const Row = useCallback(({ index, style }: { index: number; style: React.CSSProperties }) => {
+    const todo = filteredTodos[index];
+    return (
+      <div style={style}>
+        <TodoItem key={todo.id} todo={todo} />
+      </div>
+    );
+  }, [filteredTodos]);
+
+  const listTitle = useMemo(() => getListTitle(), [getListTitle]);
 
   return (
     <ListContainer>
       <ListHeader>
         <FaListUl />
-        <ListTitle>{getListTitle()}</ListTitle>
+        <ListTitle>{listTitle}</ListTitle>
       </ListHeader>
       
       <FilterContainer>
@@ -237,7 +257,7 @@ const TodoList: React.FC = () => {
           <Select
             id="filter"
             value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            onChange={handleFilterChange}
           >
             <option value="todas">Todas as tarefas</option>
             <option value="pendentes">Pendentes</option>
@@ -253,7 +273,7 @@ const TodoList: React.FC = () => {
           <Select
             id="sort"
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
+            onChange={handleSortChange}
           >
             <option value="data">Data</option>
             <option value="prioridade">Prioridade</option>
@@ -265,9 +285,18 @@ const TodoList: React.FC = () => {
 
       {filteredTodos.length > 0 ? (
         <TodoListItems>
-          {filteredTodos.map((todo) => (
-            <TodoItem key={todo.id} todo={todo} />
-          ))}
+          <AutoSizer>
+            {({ width, height }) => (
+              <List
+                width={width}
+                height={height}
+                itemCount={filteredTodos.length}
+                itemSize={ITEM_SIZE}
+              >
+                {Row}
+              </List>
+            )}
+          </AutoSizer>
         </TodoListItems>
       ) : (
         <EmptyMessage>
@@ -284,4 +313,4 @@ const TodoList: React.FC = () => {
   );
 };
 
-export default TodoList; 
+export default memo(TodoList); 

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Todo } from '../types/Todo';
 import * as LocalStorageService from '../services/localStorage';
@@ -53,7 +53,7 @@ export const TodoProvider: React.FC<TodoProviderProps> = ({ children }) => {
   }, []);
 
   // Filtrar e ordenar tarefas com base nos critérios selecionados
-  const filteredTodos = React.useMemo(() => {
+  const filteredTodos = useMemo(() => {
     let result = [...todos];
     
     // Aplicar filtro de categoria
@@ -93,7 +93,8 @@ export const TodoProvider: React.FC<TodoProviderProps> = ({ children }) => {
     return result;
   }, [todos, filter, sortBy, searchQuery, activeCategory]);
 
-  const handleAddTodo = (todoData: Omit<Todo, 'id' | 'createdAt'>) => {
+  // Memoizando os handlers com useCallback para evitar re-renderizações
+  const handleAddTodo = useCallback((todoData: Omit<Todo, 'id' | 'createdAt'>) => {
     const newTodo: Todo = {
       ...todoData,
       id: uuidv4(),
@@ -107,9 +108,9 @@ export const TodoProvider: React.FC<TodoProviderProps> = ({ children }) => {
     if (newTodo.category && !categories.includes(newTodo.category)) {
       setCategories(prev => [...prev, newTodo.category]);
     }
-  };
+  }, [categories]);
 
-  const handleUpdateTodo = (updatedTodo: Todo) => {
+  const handleUpdateTodo = useCallback((updatedTodo: Todo) => {
     const updatedTodos = LocalStorageService.updateTodo(updatedTodo);
     setTodos(updatedTodos);
     
@@ -117,9 +118,9 @@ export const TodoProvider: React.FC<TodoProviderProps> = ({ children }) => {
     if (updatedTodo.category && !categories.includes(updatedTodo.category)) {
       setCategories(prev => [...prev, updatedTodo.category]);
     }
-  };
+  }, [categories]);
 
-  const handleDeleteTodo = (id: string) => {
+  const handleDeleteTodo = useCallback((id: string) => {
     const updatedTodos = LocalStorageService.deleteTodo(id);
     setTodos(updatedTodos);
     
@@ -131,20 +132,20 @@ export const TodoProvider: React.FC<TodoProviderProps> = ({ children }) => {
         acc.includes(category) ? acc : [...acc, category], 
       []);
     setCategories(uniqueCategories);
-  };
+  }, []);
 
-  const handleToggleTodoCompletion = (id: string) => {
+  const handleToggleTodoCompletion = useCallback((id: string) => {
     const updatedTodos = LocalStorageService.toggleTodoCompletion(id);
     setTodos(updatedTodos);
-  };
+  }, []);
 
-  const handleAddCategory = (category: string) => {
+  const handleAddCategory = useCallback((category: string) => {
     if (!categories.includes(category)) {
       setCategories(prev => [...prev, category]);
     }
-  };
+  }, [categories]);
 
-  const handleDeleteCategory = (category: string) => {
+  const handleDeleteCategory = useCallback((category: string) => {
     // Atualizar todas as tarefas que usam esta categoria
     const updatedTodos = todos.map(todo => 
       todo.category === category ? { ...todo, category: '' } : todo
@@ -160,9 +161,10 @@ export const TodoProvider: React.FC<TodoProviderProps> = ({ children }) => {
     if (activeCategory === category) {
       setActiveCategory('todas');
     }
-  };
+  }, [todos, activeCategory]);
 
-  const value = {
+  // Memoizar o objeto de contexto para evitar re-renderizações desnecessárias
+  const contextValue = useMemo(() => ({
     todos,
     filteredTodos,
     filter,
@@ -180,9 +182,23 @@ export const TodoProvider: React.FC<TodoProviderProps> = ({ children }) => {
     toggleTodoCompletion: handleToggleTodoCompletion,
     addCategory: handleAddCategory,
     deleteCategory: handleDeleteCategory,
-  };
+  }), [
+    todos, 
+    filteredTodos, 
+    filter, 
+    sortBy, 
+    searchQuery, 
+    categories, 
+    activeCategory,
+    handleAddTodo,
+    handleUpdateTodo,
+    handleDeleteTodo,
+    handleToggleTodoCompletion,
+    handleAddCategory,
+    handleDeleteCategory
+  ]);
 
-  return <TodoContext.Provider value={value}>{children}</TodoContext.Provider>;
+  return <TodoContext.Provider value={contextValue}>{children}</TodoContext.Provider>;
 };
 
 export const useTodo = (): TodoContextProps => {
