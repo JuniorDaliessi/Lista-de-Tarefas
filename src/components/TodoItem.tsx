@@ -1,7 +1,7 @@
 import React, { useState, useCallback, memo, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { FaEdit, FaTrash, FaCheck, FaTag, FaClock, FaRegCalendarAlt } from 'react-icons/fa';
-import { Todo } from '../types/Todo';
+import { FaEdit, FaTrash, FaCheck, FaTag, FaClock, FaRegCalendarAlt, FaPlus, FaTasks, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { Todo, SubTask } from '../types/Todo';
 import { useTodo } from '../contexts/TodoContext';
 import TodoForm from './TodoForm';
 
@@ -17,7 +17,7 @@ const TodoContainer = styled.div<TodoContainerProps & { isCompleting?: boolean; 
   background-color: var(--card-background);
   border-radius: var(--radius-md);
   padding: 1.2rem;
-  margin-bottom: 1.2rem;
+  margin-bottom: 0.5rem;
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition-normal), box-shadow var(--transition-normal), 
               opacity var(--transition-normal), border-left-color var(--transition-normal);
@@ -319,13 +319,129 @@ const getTimeAgo = (dateString: string): string => {
   }
 };
 
+const SubtasksContainer = styled.div`
+  margin-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  padding-top: 0.5rem;
+`;
+
+const SubtasksList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+`;
+
+const SubtaskItem = styled.li<{ completed: boolean }>`
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed var(--border-color);
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  span {
+    flex: 1;
+    margin-left: 0.5rem;
+    text-decoration: ${props => props.completed ? 'line-through' : 'none'};
+    color: ${props => props.completed ? 'var(--text-tertiary)' : 'var(--text-primary)'};
+  }
+`;
+
+const SubtaskCheckbox = styled.button`
+  background: none;
+  border: none;
+  color: var(--accent-color);
+  cursor: pointer;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-fast), color var(--transition-fast);
+  
+  &:hover {
+    transform: scale(1.2);
+  }
+`;
+
+const SubtaskDeleteButton = styled.button`
+  background: none;
+  border: none;
+  color: var(--error-color);
+  cursor: pointer;
+  padding: 0.2rem;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  
+  &:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+`;
+
+const AddSubtaskForm = styled.form`
+  display: flex;
+  margin-top: 0.5rem;
+  
+  input {
+    flex: 1;
+    padding: 0.5rem;
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+    border: 1px solid var(--border-color);
+    background-color: var(--background-primary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+  }
+  
+  button {
+    padding: 0.5rem 0.8rem;
+    border: none;
+    background-color: var(--accent-color);
+    color: white;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+    
+    &:hover {
+      background-color: var(--accent-color-hover);
+    }
+  }
+`;
+
+const SubtasksHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  
+  h4 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    
+    svg {
+      margin-right: 0.5rem;
+    }
+  }
+`;
+
+const SubtaskStats = styled.span`
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+`;
+
 const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
-  const { toggleTodoCompletion, deleteTodo } = useTodo();
+  const { toggleTodoCompletion, deleteTodo, updateTodo, addSubtask, toggleSubtaskCompletion, deleteSubtask } = useTodo();
   const [isEditing, setIsEditing] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const itemRef = useRef<HTMLDivElement>(null);
-  
+  const [showSubtasks, setShowSubtasks] = useState(false);
+  const [newSubtask, setNewSubtask] = useState('');
+
   // Efeito para animar quando a tarefa é completada
   useEffect(() => {
     if (isCompleting) {
@@ -366,6 +482,25 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
       action();
     }
   }, []);
+
+  const handleSubtaskToggle = useCallback((subtaskId: string) => {
+    toggleSubtaskCompletion(todo.id, subtaskId);
+  }, [todo.id, toggleSubtaskCompletion]);
+
+  const handleSubtaskDelete = useCallback((subtaskId: string) => {
+    deleteSubtask(todo.id, subtaskId);
+  }, [todo.id, deleteSubtask]);
+
+  const handleAddSubtask = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    if (newSubtask.trim()) {
+      addSubtask(todo.id, newSubtask);
+      setNewSubtask('');
+    }
+  }, [todo.id, newSubtask, addSubtask]);
+
+  const completedSubtasks = todo.subtasks.filter(subtask => subtask.completed).length;
+  const totalSubtasks = todo.subtasks.length;
 
   if (isEditing) {
     return <TodoForm editTodo={todo} onCancel={() => handleSetEditing(false)} />;
@@ -464,6 +599,53 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
       >
         {todo.completed ? 'Tarefa concluída' : 'Tarefa pendente'}
       </CompletionStatus>
+
+      {/* Seção de subtarefas */}
+      {todo.subtasks && todo.subtasks.length > 0 ? (
+        <SubtasksContainer>
+          <SubtasksHeader onClick={() => setShowSubtasks(!showSubtasks)}>
+            <h4>
+              <FaTasks />
+              Subtarefas ({completedSubtasks}/{totalSubtasks})
+            </h4>
+            {showSubtasks ? <FaChevronUp /> : <FaChevronDown />}
+          </SubtasksHeader>
+          
+          {showSubtasks && (
+            <SubtasksList>
+              {todo.subtasks.map(subtask => (
+                <SubtaskItem key={subtask.id} completed={subtask.completed}>
+                  <SubtaskCheckbox 
+                    onClick={() => handleSubtaskToggle(subtask.id)}
+                    aria-label={subtask.completed ? "Marcar como pendente" : "Marcar como concluída"}
+                  >
+                    {subtask.completed ? <FaCheck /> : <div style={{ width: '1em', height: '1em', border: '1px solid var(--accent-color)', borderRadius: '50%' }} />}
+                  </SubtaskCheckbox>
+                  <span>{subtask.title}</span>
+                  <SubtaskDeleteButton 
+                    onClick={() => handleSubtaskDelete(subtask.id)}
+                    aria-label="Excluir subtarefa"
+                  >
+                    <FaTrash size={12} />
+                  </SubtaskDeleteButton>
+                </SubtaskItem>
+              ))}
+            </SubtasksList>
+          )}
+        </SubtasksContainer>
+      ) : null}
+      
+      <AddSubtaskForm onSubmit={handleAddSubtask}>
+        <input
+          type="text"
+          placeholder="Adicionar subtarefa..."
+          value={newSubtask}
+          onChange={(e) => setNewSubtask(e.target.value)}
+        />
+        <button type="submit" aria-label="Adicionar subtarefa">
+          <FaPlus />
+        </button>
+      </AddSubtaskForm>
     </TodoContainer>
   );
 };

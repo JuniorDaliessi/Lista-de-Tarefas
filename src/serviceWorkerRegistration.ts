@@ -24,7 +24,7 @@ type Config = {
 };
 
 export function register(config?: Config) {
-  if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator) {
     // O construtor URL está disponível em todos os navegadores que suportam SW.
     const publicUrl = new URL(process.env.PUBLIC_URL, window.location.href);
     if (publicUrl.origin !== window.location.origin) {
@@ -88,7 +88,7 @@ function showOfflineMessage(show: boolean) {
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background-color: var(--warning-color);
+      background-color: var(--warning-color, #ff9800);
       color: white;
       padding: 12px 20px;
       border-radius: 8px;

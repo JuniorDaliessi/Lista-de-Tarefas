@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { NavLink } from 'react-router-dom';
-import { FaHome, FaFilter, FaClipboardList, FaSun, FaMoon, FaSearch, FaTags, FaPlus, FaTimes, FaCheck } from 'react-icons/fa';
+import { FaHome, FaFilter, FaClipboardList, FaSun, FaMoon, FaSearch, FaTags, FaPlus, FaTimes, FaCheck, FaChartBar } from 'react-icons/fa';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTodo } from '../contexts/TodoContext';
 
@@ -123,23 +123,53 @@ const ThemeToggle = styled.button`
 `;
 
 const SearchContainer = styled.div`
-  padding: 0 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `;
 
 const SearchInput = styled.div`
-  display: flex;
   position: relative;
+  width: 100%;
   
   input {
     width: 100%;
-    padding: 0.7rem 0.8rem 0.7rem 2.5rem;
+    padding: 0.8rem 1rem 0.8rem 2.5rem;
     border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
     background-color: var(--background-primary);
-    transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    transition: all var(--transition-fast);
     
     &:focus {
-      box-shadow: var(--shadow-sm);
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(79, 134, 247, 0.2);
+    }
+    
+    &::placeholder {
+      color: var(--text-tertiary);
+    }
+  }
+`;
+
+const SearchTypeSelect = styled.div`
+  width: 100%;
+  
+  select {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background-color: var(--background-primary);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    transition: all var(--transition-fast);
+    
+    &:focus {
+      outline: none;
       border-color: var(--accent-color);
     }
   }
@@ -333,7 +363,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar, isMobile }) => 
   const { theme, toggleTheme } = useTheme();
   const { 
     searchQuery, 
-    setSearchQuery, 
+    setSearchQuery,
+    searchType,
+    setSearchType,
     categories, 
     activeCategory, 
     setActiveCategory,
@@ -402,6 +434,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar, isMobile }) => 
             <FaSearch />
           </SearchIcon>
         </SearchInput>
+        <SearchTypeSelect>
+          <select
+            value={searchType}
+            onChange={(e) => setSearchType(e.target.value as 'title' | 'description' | 'category' | 'all')}
+            aria-label="Tipo de busca"
+          >
+            <option value="all">Buscar em tudo</option>
+            <option value="title">Apenas títulos</option>
+            <option value="description">Apenas descrições</option>
+            <option value="category">Apenas categorias</option>
+          </select>
+        </SearchTypeSelect>
       </SearchContainer>
       
       <NavMenu>
@@ -427,6 +471,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar, isMobile }) => 
               <FaClipboardList />
             </Icon>
             <Text>Todas as Tarefas</Text>
+          </StyledNavLink>
+        </NavItem>
+        <NavItem>
+          <StyledNavLink to="/dashboard" onClick={handleNavClick}>
+            <Icon>
+              <FaChartBar />
+            </Icon>
+            <Text>Dashboard</Text>
           </StyledNavLink>
         </NavItem>
       </NavMenu>

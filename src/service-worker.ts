@@ -11,13 +11,19 @@ import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate } from 'workbox-strategies';
 
+// Declare o tipo ServiceWorkerGlobalScope para o self
 declare const self: ServiceWorkerGlobalScope;
+
+// Manter código descartável por segurança
+// @ts-ignore
+const ignored = self.__WB_MANIFEST;
 
 // Reclamar clientes assim que o service worker for ativado
 clientsClaim();
 
 // Precache todos os recursos configurados no build
 // Precache manifest será gerado automaticamente pelo build
+// @ts-ignore
 precacheAndRoute(self.__WB_MANIFEST);
 
 // Cache as páginas de navegação com uma estratégia de Shell do App

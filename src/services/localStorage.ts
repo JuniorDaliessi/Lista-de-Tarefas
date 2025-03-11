@@ -7,15 +7,29 @@ const STORAGE_KEY = 'todos';
  * @returns Lista de tarefas
  */
 export const getTodos = (): Todo[] => {
-  const storedTodos = localStorage.getItem(STORAGE_KEY);
-  if (!storedTodos) {
-    return [];
-  }
-  
   try {
-    return JSON.parse(storedTodos);
+    const storedTodos = localStorage.getItem(STORAGE_KEY);
+    if (!storedTodos) {
+      return [];
+    }
+    
+    const parsedTodos = JSON.parse(storedTodos);
+    
+    // Validar se o resultado é um array
+    if (!Array.isArray(parsedTodos)) {
+      console.error("Dados armazenados inválidos:", parsedTodos);
+      return [];
+    }
+    
+    // Garantir que todas as tarefas tenham a propriedade subtasks
+    return parsedTodos.map(todo => ({
+      ...todo,
+      subtasks: todo.subtasks || []
+    }));
   } catch (error) {
     console.error('Erro ao carregar tarefas do localStorage:', error);
+    // Em caso de erro, limpar localStorage para evitar problemas futuros
+    localStorage.removeItem(STORAGE_KEY);
     return [];
   }
 };
@@ -25,7 +39,17 @@ export const getTodos = (): Todo[] => {
  * @param todos Lista de tarefas a ser salva
  */
 export const saveTodos = (todos: Todo[]): void => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+  try {
+    // Garantir que estamos salvando um array válido
+    if (!Array.isArray(todos)) {
+      console.error("Tentativa de salvar dados não-array:", todos);
+      return;
+    }
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+  } catch (error) {
+    console.error('Erro ao salvar tarefas no localStorage:', error);
+  }
 };
 
 /**

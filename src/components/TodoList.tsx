@@ -125,6 +125,8 @@ const Select = styled.select`
 const TodoListItems = styled.div`
   height: 600px;
   width: 100%;
+  overflow: visible;
+  padding: 0.5rem 0;
   
   @media (max-width: 768px) {
     height: 500px;
@@ -172,7 +174,13 @@ const EmptyMessage = styled.div`
 `;
 
 // Altura média estimada de cada item de tarefa
-const ITEM_SIZE = 180;
+const ITEM_SIZE = 210;
+
+// Definição de tipos para AutoSizer
+interface Size {
+  width: number;
+  height: number;
+}
 
 const TodoList: React.FC = () => {
   const { filteredTodos, filter, setFilter, sortBy, setSortBy, searchQuery } = useTodo();
@@ -231,15 +239,34 @@ const TodoList: React.FC = () => {
   }, [setSortBy]);
 
   const Row = useCallback(({ index, style }: { index: number; style: React.CSSProperties }) => {
+    if (!filteredTodos || index >= filteredTodos.length) {
+      console.error("Problema na renderização da lista:", { index, totalTodos: filteredTodos?.length });
+      return null;
+    }
+    
     const todo = filteredTodos[index];
+    if (!todo) {
+      console.error("Todo indefinido no índice:", index);
+      return null;
+    }
+    
     return (
-      <div style={style}>
+      <div style={{
+        ...style,
+        paddingTop: 8,
+        paddingBottom: 8,
+      }}>
         <TodoItem key={todo.id} todo={todo} />
       </div>
     );
   }, [filteredTodos]);
 
   const listTitle = useMemo(() => getListTitle(), [getListTitle]);
+  
+  // Renderizar uma versão simplificada se houver problemas
+  if (!filteredTodos) {
+    return <div>Carregando tarefas...</div>;
+  }
 
   return (
     <ListContainer>
@@ -286,16 +313,24 @@ const TodoList: React.FC = () => {
       {filteredTodos.length > 0 ? (
         <TodoListItems>
           <AutoSizer>
-            {({ width, height }) => (
-              <List
-                width={width}
-                height={height}
-                itemCount={filteredTodos.length}
-                itemSize={ITEM_SIZE}
-              >
-                {Row}
-              </List>
-            )}
+            {({ width, height }) => {
+              if (width === 0 || height === 0) {
+                console.error("AutoSizer retornou dimensões inválidas:", { width, height });
+                return null;
+              }
+              
+              return (
+                <List
+                  width={width}
+                  height={height}
+                  itemCount={filteredTodos.length}
+                  itemSize={ITEM_SIZE}
+                  overscanCount={3}
+                >
+                  {Row}
+                </List>
+              );
+            }}
           </AutoSizer>
         </TodoListItems>
       ) : (

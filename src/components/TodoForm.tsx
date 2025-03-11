@@ -388,9 +388,17 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
       };
 
       if (editTodo) {
-        updateTodo({ ...todoData, id: editTodo.id, createdAt: editTodo.createdAt });
+        updateTodo({ 
+          ...todoData, 
+          id: editTodo.id, 
+          createdAt: editTodo.createdAt,
+          subtasks: editTodo.subtasks 
+        });
       } else {
-        addTodo(todoData);
+        addTodo({
+          ...todoData,
+          // A propriedade subtasks será adicionada automaticamente pelo addTodo
+        });
       }
 
       // Mostrar mensagem de sucesso
