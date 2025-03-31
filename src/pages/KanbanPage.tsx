@@ -553,36 +553,45 @@ const NoProjectMessage = styled.div`
   }
 `;
 
-const AddColumnButton = styled(ActionButton)`
+const AddColumnButton = styled.button`
   min-width: 280px;
-  height: 80px;
-  margin-top: 36px;
-  border: 2px dashed var(--border-color);
-  background: var(--background-primary);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--background-secondary);
   color: var(--text-secondary);
+  border: 2px dashed var(--border-color);
+  border-radius: 10px;
+  padding: 1rem;
+  cursor: pointer;
   transition: all 0.2s;
-  align-self: flex-start;
-  flex-shrink: 0;
+  margin-top: auto;
+  margin-bottom: 1rem;
+  font-weight: 500;
   
   &:hover {
-    border-color: var(--accent-color);
+    background-color: var(--hover-background);
     color: var(--accent-color);
-    background: var(--background-primary);
+    border-color: var(--accent-light);
   }
   
   @media (max-width: 768px) {
     min-width: 260px;
-    height: 70px;
-    margin-top: 20px;
   }
   
   @media (max-width: 480px) {
     min-width: 85vw;
-    width: 85vw;
-    height: 60px;
-    margin-top: 15px;
-    font-size: 0.85rem;
+    padding: 0.8rem;
   }
+`;
+
+const FooterContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  width: 100%;
 `;
 
 const ScrollInstructor = styled.div`
@@ -975,6 +984,13 @@ const KanbanPage: React.FC = () => {
                       wipLimit={column.wipLimit}
                       tasksCount={columnTasks.length}
                       onAddCard={() => handleCreateNewTask(column.id)}
+                      onDeleteColumn={() => {
+                        if (window.confirm(`Tem certeza que deseja excluir a coluna "${column.title}"? Todas as tarefas nesta coluna serão removidas do projeto.`)) {
+                          if (activeProjectId) {
+                            deleteColumn(activeProjectId, column.id);
+                          }
+                        }
+                      }}
                       onDragOver={(e) => handleColumnDragOver(e, column.id)}
                       onDrop={(e) => handleColumnDrop(e, column.id)}
                     >
@@ -990,16 +1006,19 @@ const KanbanPage: React.FC = () => {
                     </KanbanColumn>
                   );
                 })}
-              
+            </KanbanBoard>
+            
+            <FooterContainer>
               <AddColumnButton onClick={() => setShowCreateColumnModal(true)}>
                 <FaPlus /> Adicionar Coluna
               </AddColumnButton>
-            </KanbanBoard>
+            </FooterContainer>
           </KanbanContainer>
         </>
       ) : (
         <NoProjectMessage>
-          Selecione um projeto para visualizar o quadro Kanban.
+          <h3>Selecione um projeto</h3>
+          <p>Escolha um projeto existente ou crie um novo para visualizar o quadro Kanban.</p>
         </NoProjectMessage>
       )}
       

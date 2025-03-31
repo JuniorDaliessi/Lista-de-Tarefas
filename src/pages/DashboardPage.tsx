@@ -442,7 +442,7 @@ const HeatMapHeader = styled.div`
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.8rem;
+  gap: 0.8rem;
   }
   
   @media (max-width: 480px) {
@@ -929,7 +929,7 @@ const DashboardPage: React.FC = () => {
     <DashboardContainer>
       <DashboardHeader>
         <DashboardTitle>
-          <FaChartBar />
+        <FaChartBar />
           Dashboard de Métricas
         </DashboardTitle>
         
@@ -1023,7 +1023,7 @@ const DashboardPage: React.FC = () => {
       {/* Gráficos principais em Grid */}
       <GridSection>
         {/* Status de Conclusão */}
-        <ChartSection>
+      <ChartSection>
           <ChartHeader>
             <h2><FaChartPie /> Status das Tarefas</h2>
             
@@ -1043,28 +1043,28 @@ const DashboardPage: React.FC = () => {
             </Tabs>
           </ChartHeader>
           
-          <ChartContainer>
+        <ChartContainer>
             {selectedChartTab === 'pie' ? (
-              <PieChartContainer>
+          <PieChartContainer>
                 <PieOuterContainer>
-                  <PieChart percentageComplete={completionPercentage} />
+              <PieChart percentageComplete={completionPercentage} />
                 </PieOuterContainer>
                 
-                <PieLegend>
-                  <LegendItem>
-                    <LegendColor color="var(--success-color)" />
+              <PieLegend>
+                <LegendItem>
+                  <LegendColor color="var(--success-color)" />
                     Concluídas: {stats.completed} ({completionPercentage}%)
-                  </LegendItem>
-                  <LegendItem>
-                    <LegendColor color="var(--error-color)" />
+                </LegendItem>
+                <LegendItem>
+                  <LegendColor color="var(--error-color)" />
                     Pendentes: {stats.pending} ({100 - completionPercentage}%)
                   </LegendItem>
                   <LegendItem>
                     <LegendColor color="var(--accent-color)" />
                     Total: {stats.total} tarefas
-                  </LegendItem>
-                </PieLegend>
-              </PieChartContainer>
+                </LegendItem>
+              </PieLegend>
+          </PieChartContainer>
             ) : (
               <HorizontalBarChart>
                 <BarItem>
@@ -1093,22 +1093,22 @@ const DashboardPage: React.FC = () => {
                 </BarItem>
               </HorizontalBarChart>
             )}
-          </ChartContainer>
-        </ChartSection>
-        
+        </ChartContainer>
+      </ChartSection>
+      
         {/* Distribuição por Prioridade */}
-        <ChartSection>
+      <ChartSection>
           <ChartHeader>
-            <h2><FaExclamationTriangle /> Distribuição por Prioridade</h2>
+        <h2><FaExclamationTriangle /> Distribuição por Prioridade</h2>
           </ChartHeader>
           
-          <ChartContainer>
+        <ChartContainer>
             <HorizontalBarChart>
-              {priorityData.map(priority => (
+            {priorityData.map(priority => (
                 <BarItem key={priority.name}>
-                  <BarLabel>
-                    {priority.name.charAt(0).toUpperCase() + priority.name.slice(1)}
-                  </BarLabel>
+                <BarLabel>
+                  {priority.name.charAt(0).toUpperCase() + priority.name.slice(1)}
+                </BarLabel>
                   <BarContainer>
                     <Bar 
                       width={priority.percentage} 
@@ -1118,8 +1118,8 @@ const DashboardPage: React.FC = () => {
                 </BarItem>
               ))}
             </HorizontalBarChart>
-          </ChartContainer>
-        </ChartSection>
+        </ChartContainer>
+      </ChartSection>
       </GridSection>
       
       {/* Tendência de Conclusão de Tarefas */}
@@ -1176,8 +1176,8 @@ const DashboardPage: React.FC = () => {
                         <td>{project.completionRate}%</td>
                         <td>{project.avgLeadTimeDays} dias</td>
                       </tr>
-                    ))
-                ) : (
+              ))
+            ) : (
                   <tr>
                     <td colSpan={5}>Nenhum projeto com tarefas encontrado</td>
                   </tr>

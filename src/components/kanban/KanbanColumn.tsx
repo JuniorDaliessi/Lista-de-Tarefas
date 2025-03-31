@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import styled from 'styled-components';
-import { FaPlus, FaInfoCircle } from 'react-icons/fa';
+import { FaPlus, FaInfoCircle, FaTrash } from 'react-icons/fa';
 
 const ColumnContainer = styled.div`
   background-color: var(--background-primary);
@@ -59,6 +59,12 @@ const ColumnHeader = styled.div`
   }
 `;
 
+const ColumnTitleWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
 const ColumnTitle = styled.h3`
   margin: 0;
   font-size: 1rem;
@@ -103,6 +109,24 @@ const TaskCount = styled.span<{ isWipLimitReached?: boolean }>`
   @media (max-width: 480px) {
     font-size: 0.75rem;
     padding: 0.2rem 0.5rem;
+  }
+`;
+
+const DeleteColumnButton = styled.button`
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  
+  &:hover {
+    color: var(--error-color);
+    background-color: var(--error-light);
   }
 `;
 
@@ -223,6 +247,7 @@ interface KanbanColumnProps {
   tasksCount: number;
   children: ReactNode;
   onAddCard: () => void;
+  onDeleteColumn?: () => void;
   onDragOver?: (e: React.DragEvent<HTMLDivElement>) => void;
   onDrop?: (e: React.DragEvent<HTMLDivElement>) => void;
 }
@@ -234,6 +259,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   tasksCount,
   children, 
   onAddCard,
+  onDeleteColumn,
   onDragOver,
   onDrop
 }) => {
@@ -264,28 +290,34 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   };
   
   return (
-    <ColumnContainer>
+    <ColumnContainer 
+      onDragOver={handleDragOver} 
+      onDragLeave={handleDragLeave} 
+      onDrop={handleDrop}
+    >
       <ColumnHeader>
-        <ColumnTitle>{title}</ColumnTitle>
-        <TaskCount isWipLimitReached={isWipLimitReached}>
-          {tasksCount}{wipLimit !== undefined && `/${wipLimit}`}
-        </TaskCount>
+        <ColumnTitleWrapper>
+          <ColumnTitle>{title}</ColumnTitle>
+          <TaskCount isWipLimitReached={isWipLimitReached}>
+            {tasksCount}{wipLimit !== undefined && `/${wipLimit}`}
+          </TaskCount>
+        </ColumnTitleWrapper>
+        {onDeleteColumn && (
+          <DeleteColumnButton 
+            onClick={onDeleteColumn}
+            aria-label={`Excluir coluna ${title}`}
+            title={`Excluir coluna ${title}`}
+          >
+            <FaTrash size={14} />
+          </DeleteColumnButton>
+        )}
       </ColumnHeader>
-      
-      <CardsContainer
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        data-column-id={id}
-        isDraggingOver={isDraggingOver}
-        isEmpty={isEmpty}
-      >
+      <CardsContainer isDraggingOver={isDraggingOver} isEmpty={isEmpty}>
         {children}
         <DropIndicator visible={isDraggingOver} />
       </CardsContainer>
-      
       <AddCardButton onClick={onAddCard}>
-        <FaPlus /> Adicionar tarefa
+        <FaPlus /> Adicionar Tarefa
       </AddCardButton>
     </ColumnContainer>
   );
