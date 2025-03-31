@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import styled from 'styled-components';
 import { FaPlus, FaInfoCircle } from 'react-icons/fa';
+import { Droppable } from 'react-beautiful-dnd';
 
 const ColumnContainer = styled.div`
   background-color: var(--background-primary);
@@ -83,13 +84,16 @@ const TaskCount = styled.span<{ isWipLimitReached?: boolean }>`
   }
 `;
 
-const CardsContainer = styled.div`
+const CardsContainer = styled.div<{ isDraggingOver: boolean }>`
   padding: 1rem;
   flex-grow: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+  background-color: ${props => props.isDraggingOver ? 'var(--hover-background)' : 'transparent'};
+  min-height: 100px;
+  transition: background-color 0.2s ease;
   
   /* Custom scrollbar */
   scrollbar-width: thin;
@@ -193,9 +197,18 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         </TaskCount>
       </ColumnHeader>
       
-      <CardsContainer>
-        {children}
-      </CardsContainer>
+      <Droppable droppableId={id}>
+        {(provided, snapshot) => (
+          <CardsContainer
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            isDraggingOver={snapshot.isDraggingOver}
+          >
+            {children}
+            {provided.placeholder}
+          </CardsContainer>
+        )}
+      </Droppable>
       
       <AddCardButton onClick={onAddCard}>
         <FaPlus /> Adicionar tarefa

@@ -3,21 +3,24 @@ import styled from 'styled-components';
 import { Todo } from '../../types/Todo';
 import { FaCalendarAlt, FaTrash, FaCheck, FaClock, FaTag, FaProjectDiagram } from 'react-icons/fa';
 import { useProject } from '../../contexts/ProjectContext';
+import { Draggable } from 'react-beautiful-dnd';
 
 interface CardContainerProps {
   $completed?: boolean;
+  $isDragging?: boolean;
 }
 
 const CardContainer = styled.div<CardContainerProps>`
-  background-color: var(--card-background);
+  background-color: ${props => props.$isDragging ? 'var(--accent-light)' : 'var(--card-background)'};
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: ${props => props.$isDragging ? '0 8px 20px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.08)'};
   padding: 1rem;
-  cursor: pointer;
+  cursor: grab;
   transition: all 0.2s ease-in-out;
   border-left: 3px solid var(--accent-color);
   position: relative;
   overflow: hidden;
+  transform: ${props => props.$isDragging ? 'rotate(1deg)' : 'none'};
   
   &:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -25,6 +28,7 @@ const CardContainer = styled.div<CardContainerProps>`
   }
   
   &:active {
+    cursor: grabbing;
     transform: translateY(0);
   }
   
@@ -300,64 +304,75 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ todo, index, onClick, onRemove 
   };
   
   return (
-    <CardContainer $completed={todo.completed} onClick={onClick}>
-      <CardContent>
-        <CardTitle $completed={todo.completed}>
-          {todo.completed && <CompletedIcon />}
-          {todo.title}
-        </CardTitle>
-        
-        {todo.description && <CardDescription>{todo.description}</CardDescription>}
-        
-        <CardMeta>
-          {todo.date && (
-            <MetaItem>
-              <FaCalendarAlt />
-              <span>{formatDate(todo.date)}</span>
-            </MetaItem>
-          )}
-          {todo.category && (
-            <MetaItem>
-              <FaTag />
-              <span>{todo.category}</span>
-            </MetaItem>
-          )}
-          {!todo.completed && (
-            <MetaItem style={{ 
-              color: isPastDue() ? 'var(--error-color)' : 'inherit',
-              fontWeight: isPastDue() ? 'bold' : 'normal'
-            }}>
-              <FaClock />
-              <span>{getDaysUntilDue(todo.date)}</span>
-            </MetaItem>
-          )}
-        </CardMeta>
-        
-        {/* Indicador de projeto */}
-        {associatedProject && (
-          <ProjectIndicator>
-            <FaProjectDiagram />
-            <span>{associatedProject.name}</span>
-          </ProjectIndicator>
-        )}
-        
-        <CardFooter>
-          <CardPriority priority={todo.priority}>
-            {todo.priority}
-          </CardPriority>
-          
-          <CardActions>
-            <DeleteButton 
-              onClick={handleRemoveClick} 
-              title="Remover da coluna"
-              aria-label="Remover tarefa da coluna"
-            >
-              <FaTrash size={14} />
-            </DeleteButton>
-          </CardActions>
-        </CardFooter>
-      </CardContent>
-    </CardContainer>
+    <Draggable draggableId={todo.id} index={index}>
+      {(provided, snapshot) => (
+        <CardContainer
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          $completed={todo.completed}
+          $isDragging={snapshot.isDragging}
+          onClick={onClick}
+        >
+          <CardContent>
+            <CardTitle $completed={todo.completed}>
+              {todo.completed && <CompletedIcon />}
+              {todo.title}
+            </CardTitle>
+            
+            {todo.description && <CardDescription>{todo.description}</CardDescription>}
+            
+            <CardMeta>
+              {todo.date && (
+                <MetaItem>
+                  <FaCalendarAlt />
+                  <span>{formatDate(todo.date)}</span>
+                </MetaItem>
+              )}
+              {todo.category && (
+                <MetaItem>
+                  <FaTag />
+                  <span>{todo.category}</span>
+                </MetaItem>
+              )}
+              {!todo.completed && (
+                <MetaItem style={{ 
+                  color: isPastDue() ? 'var(--error-color)' : 'inherit',
+                  fontWeight: isPastDue() ? 'bold' : 'normal'
+                }}>
+                  <FaClock />
+                  <span>{getDaysUntilDue(todo.date)}</span>
+                </MetaItem>
+              )}
+            </CardMeta>
+            
+            {/* Indicador de projeto */}
+            {associatedProject && (
+              <ProjectIndicator>
+                <FaProjectDiagram />
+                <span>{associatedProject.name}</span>
+              </ProjectIndicator>
+            )}
+            
+            <CardFooter>
+              <CardPriority priority={todo.priority}>
+                {todo.priority}
+              </CardPriority>
+              
+              <CardActions>
+                <DeleteButton 
+                  onClick={handleRemoveClick} 
+                  title="Remover da coluna"
+                  aria-label="Remover tarefa da coluna"
+                >
+                  <FaTrash size={14} />
+                </DeleteButton>
+              </CardActions>
+            </CardFooter>
+          </CardContent>
+        </CardContainer>
+      )}
+    </Draggable>
   );
 };
 

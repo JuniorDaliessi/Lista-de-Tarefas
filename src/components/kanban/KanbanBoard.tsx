@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import styled from 'styled-components';
+import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 
 const BoardContainer = styled.div`
   display: flex;
@@ -79,14 +80,17 @@ const BoardWrapper = styled.div`
 
 interface KanbanBoardProps {
   children: ReactNode;
+  onDragEnd: (result: DropResult) => void;
 }
 
-const KanbanBoard: React.FC<KanbanBoardProps> = ({ children }) => {
+const KanbanBoard: React.FC<KanbanBoardProps> = ({ children, onDragEnd }) => {
   return (
     <BoardWrapper>
-      <BoardContainer>
-        {children}
-      </BoardContainer>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <BoardContainer>
+          {children}
+        </BoardContainer>
+      </DragDropContext>
     </BoardWrapper>
   );
 };

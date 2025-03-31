@@ -15,6 +15,7 @@ import EditProjectModal from '../components/kanban/EditProjectModal';
 import CreateColumnModal from '../components/kanban/CreateColumnModal';
 import KanbanFilters from '../components/kanban/KanbanFilters';
 import KanbanMetrics from '../components/kanban/KanbanMetrics';
+import { DropResult } from 'react-beautiful-dnd';
 
 // Styled Components
 const KanbanPageContainer = styled.div`
@@ -661,6 +662,50 @@ const KanbanPage: React.FC = () => {
     if (showFilters && !showMetrics) setShowFilters(false);
   }, [showFilters, showMetrics]);
   
+  // Dentro do componente KanbanPage, adicione o handler para onDragEnd
+  const handleDragEnd = useCallback((result: DropResult) => {
+    const { destination, source, draggableId } = result;
+    
+    // Se não houver destino válido (arrastado para fora de uma coluna) ou se a posição não mudar
+    if (!destination || 
+        (destination.droppableId === source.droppableId && 
+         destination.index === source.index)) {
+      return;
+    }
+    
+    // Verifica se o projeto está selecionado
+    if (!currentProject || !activeProjectId) {
+      return;
+    }
+    
+    const sourceColumnId = source.droppableId;
+    const destinationColumnId = destination.droppableId;
+    const todoId = draggableId;
+    
+    // Verificar limites WIP se estiver movendo para uma coluna diferente
+    if (sourceColumnId !== destinationColumnId) {
+      const targetColumn = currentProject.columns.find(col => col.id === destinationColumnId);
+      if (targetColumn && targetColumn.wipLimit !== undefined) {
+        const currentTasksInColumn = todosByColumn[destinationColumnId]?.length || 0;
+        
+        // Se o limite WIP seria excedido
+        if (currentTasksInColumn >= targetColumn.wipLimit) {
+          alert(`Limite WIP de ${targetColumn.wipLimit} atingido para a coluna "${targetColumn.title}".`);
+          return;
+        }
+      }
+    }
+    
+    // Mover a tarefa
+    if (sourceColumnId === destinationColumnId) {
+      // Reordenar na mesma coluna
+      reorderTodoInColumn(todoId, destination.index);
+    } else {
+      // Mover para outra coluna
+      moveTodoToColumn(todoId, destinationColumnId, destination.index);
+    }
+  }, [currentProject, activeProjectId, todosByColumn, reorderTodoInColumn, moveTodoToColumn]);
+  
   // Render project creation message when no projects exist
   if (projects.length === 0) {
     return (
@@ -797,30 +842,33 @@ const KanbanPage: React.FC = () => {
           </PanelContainer>
           
           <KanbanContainer>
-            <KanbanBoard>
+            <KanbanBoard onDragEnd={handleDragEnd}>
               {currentProject.columns
                 .sort((a, b) => a.order - b.order)
-                .map(column => (
-                  <KanbanColumn 
-                    key={column.id}
-                    id={column.id}
-                    title={column.title}
-                    wipLimit={column.wipLimit}
-                    tasksCount={todosByColumn[column.id]?.length || 0}
-                    onAddCard={() => handleCreateNewTask(column.id)}
-                  >
-                    {todosByColumn[column.id]?.map((todo, index) => (
-                      <KanbanCard
-                        key={todo.id}
-                        todo={todo}
-                        index={index}
-                        onClick={() => handleTaskClick(todo.id)}
-                        onRemove={() => handleRemoveTaskFromProject(todo.id)}
-                      />
-                    ))}
-                  </KanbanColumn>
-                ))
-              }
+                .map(column => {
+                  const columnTasks = todosByColumn[column.id] || [];
+                  
+                  return (
+                    <KanbanColumn
+                      key={column.id}
+                      id={column.id}
+                      title={column.title}
+                      wipLimit={column.wipLimit}
+                      tasksCount={columnTasks.length}
+                      onAddCard={() => handleCreateNewTask(column.id)}
+                    >
+                      {columnTasks.map((todo, index) => (
+                        <KanbanCard
+                          key={todo.id}
+                          todo={todo}
+                          index={index}
+                          onClick={() => handleTaskClick(todo.id)}
+                          onRemove={() => handleRemoveTaskFromProject(todo.id)}
+                        />
+                      ))}
+                    </KanbanColumn>
+                  );
+                })}
               
               <AddColumnButton onClick={() => setShowCreateColumnModal(true)}>
                 <FaPlus /> Adicionar Coluna
