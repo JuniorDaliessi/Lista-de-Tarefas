@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { FaFilter, FaTimes } from 'react-icons/fa';
 
 const FiltersContainer = styled.div`
-  background-color: var(--background-primary);
+  background-color: #f5f5f5;
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1.5rem;
@@ -19,13 +19,13 @@ const FiltersHeader = styled.div`
 const FiltersTitle = styled.h3`
   margin: 0;
   font-size: 1.1rem;
-  color: var(--text-primary);
+  color: #333;
   display: flex;
   align-items: center;
   
   svg {
     margin-right: 0.5rem;
-    color: var(--accent-color);
+    color: #3498db;
   }
 `;
 
@@ -42,7 +42,7 @@ const FilterGroup = styled.div`
 const FilterLabel = styled.div`
   font-weight: 500;
   margin-bottom: 0.5rem;
-  color: var(--text-secondary);
+  color: #555;
   font-size: 0.9rem;
 `;
 
@@ -58,11 +58,11 @@ const FilterOption = styled.div<{ active: boolean }>`
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
-  background-color: ${props => props.active ? 'var(--accent-color)' : 'var(--background-secondary)'};
-  color: ${props => props.active ? 'white' : 'var(--text-primary)'};
+  background-color: ${props => props.active ? '#3498db' : '#e9f5fe'};
+  color: ${props => props.active ? 'white' : '#0c5460'};
   
   &:hover {
-    background-color: ${props => props.active ? 'var(--accent-dark)' : 'var(--hover-background)'};
+    background-color: ${props => props.active ? '#2980b9' : '#d6ebf5'};
   }
 `;
 
@@ -71,7 +71,7 @@ const ClearButton = styled.button`
   border: none;
   display: flex;
   align-items: center;
-  color: var(--accent-color);
+  color: #3498db;
   font-size: 0.9rem;
   cursor: pointer;
   gap: 0.3rem;
