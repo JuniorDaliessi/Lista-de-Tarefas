@@ -15,7 +15,6 @@ import EditProjectModal from '../components/kanban/EditProjectModal';
 import CreateColumnModal from '../components/kanban/CreateColumnModal';
 import KanbanFilters from '../components/kanban/KanbanFilters';
 import KanbanMetrics from '../components/kanban/KanbanMetrics';
-import { DropResult } from 'react-beautiful-dnd';
 
 // Styled Components
 const KanbanPageContainer = styled.div`

@@ -369,7 +369,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     const targetTodosToUpdate: Todo[] = [];
     targetTodos.forEach(t => {
       const currentOrder = t.order || 0;
-      if (currentOrder >= newOrder) {
+      if (newOrder !== undefined && currentOrder >= newOrder) {
         targetTodosToUpdate.push({
           ...t,
           order: currentOrder + 1
