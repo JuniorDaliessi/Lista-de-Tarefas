@@ -10,24 +10,34 @@ const ColumnContainer = styled.div`
   display: flex;
   flex-direction: column;
   max-height: 100%;
+  height: fit-content;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: transform 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+  scroll-snap-align: start;
   
   &:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Highlight effect for columns */
+  &:focus-within {
+    box-shadow: 0 0 0 2px var(--accent-color), 0 4px 12px rgba(0, 0, 0, 0.1);
+    outline: none;
   }
   
   /* Responsividade para telas menores */
   @media (max-width: 768px) {
     min-width: 260px;
     width: 260px;
+    scroll-snap-align: center;
   }
   
   @media (max-width: 480px) {
     min-width: 85vw;
     width: 85vw;
     max-height: none;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0;
   }
 `;
 
@@ -39,6 +49,9 @@ const ColumnHeader = styled.div`
   align-items: center;
   background-color: var(--background-secondary);
   border-radius: 10px 10px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
   
   /* Responsividade para telas menores */
   @media (max-width: 480px) {
@@ -55,6 +68,15 @@ const ColumnTitle = styled.h3`
   gap: 0.5rem;
   font-weight: 600;
   line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+  
+  @media (max-width: 480px) {
+    max-width: 170px;
+    font-size: 0.95rem;
+  }
 `;
 
 const TaskCount = styled.span<{ isWipLimitReached?: boolean }>`
@@ -65,6 +87,7 @@ const TaskCount = styled.span<{ isWipLimitReached?: boolean }>`
   color: ${props => props.isWipLimitReached ? 'var(--error-color)' : 'var(--accent-dark)'};
   font-weight: 600;
   transition: all 0.2s;
+  flex-shrink: 0;
   
   ${props => props.isWipLimitReached && `
     animation: pulse 1s infinite;
@@ -83,7 +106,7 @@ const TaskCount = styled.span<{ isWipLimitReached?: boolean }>`
   }
 `;
 
-const CardsContainer = styled.div<{ isDraggingOver?: boolean }>`
+const CardsContainer = styled.div<{ isDraggingOver?: boolean, isEmpty?: boolean }>`
   padding: 1rem;
   flex-grow: 1;
   overflow-y: auto;
@@ -91,7 +114,11 @@ const CardsContainer = styled.div<{ isDraggingOver?: boolean }>`
   flex-direction: column;
   gap: 0.8rem;
   min-height: 100px;
+  max-height: calc(100vh - 300px);
   transition: background-color 0.2s ease;
+  position: relative;
+  background-color: ${props => 
+    props.isDraggingOver ? 'var(--hover-background)' : 'transparent'};
   
   /* Custom scrollbar */
   scrollbar-width: thin;
@@ -128,10 +155,14 @@ const CardsContainer = styled.div<{ isDraggingOver?: boolean }>`
   }
   
   /* Responsividade para telas menores */
+  @media (max-width: 768px) {
+    max-height: 60vh;
+  }
+  
   @media (max-width: 480px) {
     padding: 0.8rem;
     gap: 0.6rem;
-    max-height: 60vh;
+    max-height: 50vh;
   }
 `;
 
@@ -150,6 +181,10 @@ const AddCardButton = styled.button`
   border-top: 1px solid var(--border-color);
   transition: all 0.2s;
   border-radius: 0 0 10px 10px;
+  position: sticky;
+  bottom: 0;
+  background-color: var(--background-primary);
+  z-index: 2;
   
   &:hover {
     background-color: var(--hover-background);
@@ -165,6 +200,20 @@ const AddCardButton = styled.button`
     padding: 0.7rem;
     font-size: 0.85rem;
   }
+`;
+
+const DropIndicator = styled.div<{ visible: boolean }>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px dashed var(--accent-color);
+  border-radius: 8px;
+  pointer-events: none;
+  display: ${props => props.visible ? 'block' : 'none'};
+  z-index: 1;
+  background-color: rgba(var(--accent-rgb), 0.05);
 `;
 
 interface KanbanColumnProps {
@@ -189,18 +238,26 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   onDrop
 }) => {
   const isWipLimitReached = wipLimit !== undefined && tasksCount >= wipLimit;
+  const [isDraggingOver, setIsDraggingOver] = React.useState(false);
+  const isEmpty = React.Children.count(children) === 0;
   
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsDraggingOver(true);
     if (onDragOver) {
       onDragOver(e);
     }
   };
   
+  const handleDragLeave = () => {
+    setIsDraggingOver(false);
+  };
+  
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsDraggingOver(false);
     if (onDrop) {
       onDrop(e);
     }
@@ -217,10 +274,14 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       
       <CardsContainer
         onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         data-column-id={id}
+        isDraggingOver={isDraggingOver}
+        isEmpty={isEmpty}
       >
         {children}
+        <DropIndicator visible={isDraggingOver} />
       </CardsContainer>
       
       <AddCardButton onClick={onAddCard}>

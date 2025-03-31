@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { FaPlus, FaEllipsisV, FaFilter, FaInfoCircle, FaColumns, FaSearch, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaPlus, FaEllipsisV, FaFilter, FaInfoCircle, FaColumns, FaSearch, FaTimes, FaChevronDown, FaChevronUp, FaEdit } from 'react-icons/fa';
 import { useTodo } from '../contexts/TodoContext';
 import { useProject } from '../contexts/ProjectContext';
 import { Project } from '../types/Project';
@@ -18,21 +18,21 @@ import KanbanMetrics from '../components/kanban/KanbanMetrics';
 
 // Styled Components
 const KanbanPageContainer = styled.div`
-  max-width: 1600px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 1.5rem 2rem;
-  height: calc(100vh - 80px);
+  padding: 0 1rem 1.5rem;
+  min-height: calc(100vh - 80px);
   display: flex;
   flex-direction: column;
   
-  @media (max-width: 1024px) {
-    padding: 0 1.2rem 1.5rem;
+  @media (min-width: 1200px) {
+    max-width: 1600px;
+    padding: 0 1.5rem 2rem;
   }
   
   @media (max-width: 768px) {
-    padding: 0 1rem 1rem;
+    padding: 0 0.75rem 1rem;
     height: auto;
-    min-height: calc(100vh - 80px);
   }
   
   @media (max-width: 480px) {
@@ -46,10 +46,12 @@ const PageHeader = styled.header`
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  width: 100%;
   
   @media (max-width: 768px) {
     padding: 1rem;
     margin-bottom: 1rem;
+    border-radius: 10px;
   }
   
   @media (max-width: 480px) {
@@ -63,6 +65,7 @@ const TopBar = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  flex-wrap: nowrap;
   
   @media (max-width: 768px) {
     flex-direction: column;
@@ -76,6 +79,7 @@ const TopBarLeft = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
+  width: 100%;
   
   @media (max-width: 768px) {
     width: 100%;
@@ -144,6 +148,8 @@ const ActionsContainer = styled.div`
       flex: 1;
       min-width: calc(50% - 0.25rem);
       justify-content: center;
+      padding: 0.6rem 0.4rem;
+      font-size: 0.8rem;
     }
   }
 `;
@@ -162,6 +168,7 @@ const ActionButton = styled.button`
   color: white;
   border: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
   
   &:hover {
     background-color: var(--accent-dark);
@@ -181,7 +188,9 @@ const ActionButton = styled.button`
   @media (max-width: 480px) {
     padding: 0.6rem 0.8rem;
     font-size: 0.85rem;
-    white-space: nowrap;
+    svg {
+      margin-right: 0.3rem;
+    }
   }
 `;
 
@@ -208,6 +217,10 @@ const SearchContainer = styled.div`
   flex: 1;
   max-width: 300px;
   margin-left: 1rem;
+  
+  @media (max-width: 1024px) {
+    max-width: 250px;
+  }
   
   @media (max-width: 768px) {
     margin-left: 0;
@@ -260,10 +273,29 @@ const SelectorRow = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+  
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 4px;
+  }
   
   @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: stretch;
+    padding-bottom: 0.3rem;
   }
 `;
 
@@ -277,6 +309,7 @@ const ProjectInfo = styled.div`
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   animation: fadeIn 0.3s ease-in-out;
+  width: 100%;
   
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
@@ -286,31 +319,54 @@ const ProjectInfo = styled.div`
   @media (max-width: 768px) {
     padding: 1rem;
     margin-bottom: 1rem;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    border-radius: 10px;
   }
   
   @media (max-width: 480px) {
     padding: 0.8rem;
     border-radius: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
   }
 `;
 
 const ProjectDetails = styled.div`
   flex: 1;
+  overflow: hidden;
 `;
 
 const ProjectName = styled.h2`
   margin: 0 0 0.3rem 0;
   font-size: 1.6rem;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  @media (max-width: 768px) {
+    font-size: 1.4rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.2rem;
+  }
 `;
 
 const ProjectDescription = styled.p`
   margin: 0;
   color: var(--text-secondary);
   font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+    -webkit-line-clamp: 3;
+  }
 `;
 
 const ProjectActions = styled.div`
@@ -318,22 +374,30 @@ const ProjectActions = styled.div`
   gap: 0.8rem;
   
   @media (max-width: 768px) {
+    margin-left: auto;
+  }
+  
+  @media (max-width: 480px) {
     width: 100%;
     justify-content: flex-end;
   }
 `;
 
-const StyledMore = styled(FaEllipsisV)`
+const StyledMore = styled(FaEdit)`
   cursor: pointer;
-  color: var(--text-secondary);
+  color: var(--accent-color);
+  font-size: 1.2rem;
   padding: 0.5rem;
   border-radius: 50%;
-  background: var(--background-secondary);
+  background: var(--background-primary);
   transition: all 0.2s;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   
   &:hover {
-    color: var(--text-primary);
-    background: var(--hover-background);
+    color: white;
+    background: var(--accent-color);
+    transform: scale(1.1);
   }
 `;
 
@@ -346,30 +410,43 @@ const KanbanContainer = styled.div`
   background: var(--background-secondary);
   padding: 1rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1rem;
+  width: 100%;
+  height: calc(100vh - 310px);
+  min-height: 500px;
+  
+  @media (min-width: 1200px) {
+    height: calc(100vh - 330px);
+  }
   
   @media (max-width: 768px) {
-    min-height: 500px;
     overflow: visible;
     border-radius: 8px;
+    padding: 0.75rem;
+    height: auto;
+    min-height: 500px;
   }
   
   @media (max-width: 480px) {
     padding: 0.5rem;
     min-height: 450px;
+    border-radius: 6px;
   }
 `;
 
 const PanelContainer = styled.div<{ show: boolean }>`
   max-height: ${props => props.show ? '300px' : '0'};
   overflow: hidden;
-  transition: max-height 0.3s ease-in-out;
+  transition: max-height 0.3s ease-in-out, margin-bottom 0.3s ease-in-out;
   margin-bottom: ${props => props.show ? '1rem' : '0'};
   border-radius: 12px;
   background: var(--background-primary);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  width: 100%;
   
   @media (max-width: 768px) {
     max-height: ${props => props.show ? '350px' : '0'};
+    border-radius: 10px;
   }
   
   @media (max-width: 480px) {
@@ -386,6 +463,11 @@ const PanelHeader = styled.div`
   background: var(--background-secondary);
   border-radius: 12px 12px 0 0;
   cursor: pointer;
+  
+  @media (max-width: 768px) {
+    padding: 0.9rem 1.2rem;
+    border-radius: 10px 10px 0 0;
+  }
   
   @media (max-width: 480px) {
     padding: 0.8rem 1rem;
@@ -404,6 +486,10 @@ const PanelTitle = styled.h3`
 
 const PanelContent = styled.div`
   padding: 1.5rem;
+  
+  @media (max-width: 768px) {
+    padding: 1.2rem 1rem;
+  }
   
   @media (max-width: 480px) {
     padding: 1rem 0.8rem;
@@ -476,6 +562,7 @@ const AddColumnButton = styled(ActionButton)`
   color: var(--text-secondary);
   transition: all 0.2s;
   align-self: flex-start;
+  flex-shrink: 0;
   
   &:hover {
     border-color: var(--accent-color);
@@ -495,6 +582,22 @@ const AddColumnButton = styled(ActionButton)`
     height: 60px;
     margin-top: 15px;
     font-size: 0.85rem;
+  }
+`;
+
+const ScrollInstructor = styled.div`
+  display: none;
+  text-align: center;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  background-color: var(--background-primary);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  
+  @media (max-width: 768px) {
+    display: block;
   }
 `;
 
@@ -852,6 +955,10 @@ const KanbanPage: React.FC = () => {
               </PanelContent>
             )}
           </PanelContainer>
+          
+          <ScrollInstructor>
+            Deslize para visualizar todas as colunas
+          </ScrollInstructor>
           
           <KanbanContainer>
             <KanbanBoard>

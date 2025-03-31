@@ -17,7 +17,7 @@ const PageHeader = styled.header`
 `;
 
 const PageTitle = styled.h1`
-  color: #333;
+  color: var(--text-primary);
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
   display: flex;
@@ -26,17 +26,17 @@ const PageTitle = styled.h1`
   
   svg {
     margin-right: 0.8rem;
-    color: #3498db;
+    color: var(--accent-color);
   }
 `;
 
 const PageSubtitle = styled.p`
-  color: #666;
+  color: var(--text-secondary);
   font-size: 1.1rem;
 `;
 
 const FiltersContainer = styled.div`
-  background-color: white;
+  background-color: var(--background-primary);
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 2rem;
@@ -50,13 +50,13 @@ const FilterGroup = styled.div`
 const FilterLabel = styled.h3`
   font-size: 1.2rem;
   margin-bottom: 0.8rem;
-  color: #333;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   
   svg {
     margin-right: 0.5rem;
-    color: #3498db;
+    color: var(--accent-color);
   }
 `;
 
@@ -72,11 +72,11 @@ const FilterOption = styled.div<{ active: boolean }>`
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s;
-  background-color: ${props => props.active ? '#3498db' : '#f0f0f0'};
-  color: ${props => props.active ? 'white' : '#555'};
+  background-color: ${props => props.active ? 'var(--accent-color)' : 'var(--background-secondary)'};
+  color: ${props => props.active ? 'white' : 'var(--text-primary)'};
   
   &:hover {
-    background-color: ${props => props.active ? '#2980b9' : '#e0e0e0'};
+    background-color: ${props => props.active ? 'var(--accent-dark)' : 'var(--hover-background)'};
   }
 `;
 
@@ -90,19 +90,19 @@ const ResultsHeader = styled.div`
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
 `;
 
 const ResultsCount = styled.span`
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-secondary);
 `;
 
 const EmptyResults = styled.div`
   text-align: center;
   padding: 3rem 1rem;
-  color: #666;
-  background-color: #f9f9f9;
+  color: var(--text-secondary);
+  background-color: var(--background-secondary);
   border-radius: 8px;
   font-size: 1.1rem;
 `;
