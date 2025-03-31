@@ -421,13 +421,123 @@ const TimelineProgress = styled.div<{ start: number; end: number; color: string 
 
 // Heat Map (representação de intensidade)
 const HeatMapContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+`;
+
+const HeatMapHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+`;
+
+const HeatMapDescription = styled.p`
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+  max-width: 500px;
+`;
+
+const HeatMapLegend = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  
+  @media (max-width: 480px) {
+    flex-wrap: wrap;
+  }
+`;
+
+const LegendScale = styled.div`
+  display: flex;
+  align-items: center;
+  background: linear-gradient(to right, rgba(var(--accent-color-rgb), 0.2), rgba(var(--accent-color-rgb), 1));
+  height: 12px;
+  width: 100px;
+  border-radius: 6px;
+  margin-right: 5px;
+`;
+
+const LegendText = styled.div`
+  display: flex;
+  justify-content: space-between;
+  width: 100px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+`;
+
+const WeekdayHeatMap = styled.div`
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: 80px repeat(7, 1fr);
   gap: 0.5rem;
   margin-top: 1rem;
   
+  @media (max-width: 768px) {
+    grid-template-columns: 60px repeat(7, 1fr);
+  }
+  
   @media (max-width: 480px) {
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+`;
+
+const TimeLabel = styled.div`
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.5rem;
+  
+  @media (max-width: 480px) {
+    justify-content: flex-start;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+  }
+`;
+
+const WeekdayLabel = styled.div`
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  text-align: center;
+  padding-bottom: 0.25rem;
+  
+  @media (max-width: 480px) {
+    grid-column: 1 / -1;
+    text-align: left;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+  }
+`;
+
+const DayRow = styled.div`
+  display: contents;
+  
+  @media (max-width: 480px) {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5rem;
+  }
+`;
+
+const MobileTimeRow = styled.div`
+  display: none;
+  
+  @media (max-width: 480px) {
+    display: flex;
+    margin-bottom: 0.25rem;
   }
 `;
 
@@ -435,15 +545,41 @@ const HeatMapCell = styled.div<{ intensity: number }>`
   aspect-ratio: 1;
   border-radius: 4px;
   background-color: ${props => {
-    const alpha = 0.2 + (props.intensity * 0.8);
+    const alpha = 0.1 + (props.intensity * 0.9);
     return `rgba(var(--accent-color-rgb), ${alpha})`;
   }};
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${props => props.intensity > 0.5 ? 'white' : 'var(--text-primary)'};
-  font-size: 0.8rem;
-  font-weight: 600;
+  color: ${props => props.intensity > 0.6 ? 'white' : 'var(--text-primary)'};
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+  
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1;
+  }
+  
+  @media (max-width: 768px) {
+    font-size: 0.75rem;
+  }
+  
+  @media (max-width: 480px) {
+    aspect-ratio: auto;
+    padding: 0.5rem;
+    height: auto;
+  }
+`;
+
+const EmptyCell = styled.div`
+  aspect-ratio: 1;
+  
+  @media (max-width: 480px) {
+    display: none;
+  }
 `;
 
 // Componente principal do Dashboard
@@ -649,40 +785,42 @@ const DashboardPage: React.FC = () => {
       return [];
     }
     
-    return projects.map(project => {
-      if (!project || !project.id) return null;
-      
-      const projectTodos = todos.filter(todo => todo && todo.projectId === project.id);
-      const completed = projectTodos.filter(todo => todo && todo.completed).length;
-      const total = projectTodos.length;
-      const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
-      
-      // Calcular lead time médio
-      let totalLeadTime = 0;
-      let todoCount = 0;
-      
-      projectTodos.forEach(todo => {
-        if (!todo || !todo.id) return;
-        const leadTime = getLeadTime(todo.id);
-        if (leadTime) {
-          totalLeadTime += leadTime;
-          todoCount++;
-        }
-      });
-      
-      const avgLeadTimeMs = todoCount > 0 ? totalLeadTime / todoCount : 0;
-      const avgLeadTimeDays = Math.round(avgLeadTimeMs / (1000 * 60 * 60 * 24) * 10) / 10;
-      
-      return {
-        id: project.id,
-        name: project.name || 'Sem nome',
-        total,
-        completed,
-        completionRate,
-        avgLeadTimeDays
-      };
-    })
-    .filter(p => p && p.total > 0);
+    // Usar filter para remover resultados nulos antes do map final
+    return projects
+      .map(project => {
+        if (!project || !project.id) return null;
+        
+        const projectTodos = todos.filter(todo => todo && todo.projectId === project.id);
+        const completed = projectTodos.filter(todo => todo && todo.completed).length;
+        const total = projectTodos.length;
+        const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+        
+        // Calcular lead time médio
+        let totalLeadTime = 0;
+        let todoCount = 0;
+        
+        projectTodos.forEach(todo => {
+          if (!todo || !todo.id) return;
+          const leadTime = getLeadTime(todo.id);
+          if (leadTime) {
+            totalLeadTime += leadTime;
+            todoCount++;
+          }
+        });
+        
+        const avgLeadTimeMs = todoCount > 0 ? totalLeadTime / todoCount : 0;
+        const avgLeadTimeDays = Math.round(avgLeadTimeMs / (1000 * 60 * 60 * 24) * 10) / 10;
+        
+        return {
+          id: project.id,
+          name: project.name || 'Sem nome',
+          total,
+          completed,
+          completionRate,
+          avgLeadTimeDays
+        };
+      })
+      .filter((p): p is NonNullable<typeof p> => p !== null);
   }, [projects, todos, getLeadTime]);
   
   // Dados para heat map de atividade por dia da semana
@@ -999,15 +1137,17 @@ const DashboardPage: React.FC = () => {
               </thead>
               <tbody>
                 {projectMetrics.length > 0 ? (
-                  projectMetrics.map(project => (
-                    <tr key={project.id}>
-                      <td>{project.name}</td>
-                      <td>{project.total}</td>
-                      <td>{project.completed}</td>
-                      <td>{project.completionRate}%</td>
-                      <td>{project.avgLeadTimeDays} dias</td>
-                    </tr>
-                  ))
+                  projectMetrics
+                    .filter(p => p.total > 0)
+                    .map(project => (
+                      <tr key={project.id}>
+                        <td>{project.name}</td>
+                        <td>{project.total}</td>
+                        <td>{project.completed}</td>
+                        <td>{project.completionRate}%</td>
+                        <td>{project.avgLeadTimeDays} dias</td>
+                      </tr>
+                    ))
                 ) : (
                   <tr>
                     <td colSpan={5}>Nenhum projeto com tarefas encontrado</td>
@@ -1027,18 +1167,103 @@ const DashboardPage: React.FC = () => {
         
         <ChartContainer>
           <HeatMapContainer>
-            {activityHeatMapData
-              .sort((a, b) => b.value - a.value)
-              .slice(0, 15)
-              .map(item => (
-                <HeatMapCell key={item.key} intensity={item.intensity}>
-                  {item.value > 0 ? item.value : ''}
-                  <br />
-                  {item.label[0].substring(0, 3)}
-                  <br />
-                  {item.label[1]}
-                </HeatMapCell>
-              ))}
+            <HeatMapHeader>
+              <HeatMapDescription>
+                Este gráfico mostra quando você costuma criar tarefas durante a semana.
+                As células mais escuras indicam períodos com maior atividade.
+              </HeatMapDescription>
+              
+              <HeatMapLegend>
+                <span>Intensidade:</span>
+                <LegendScale />
+                <LegendText>
+                  <span>Baixa</span>
+                  <span>Alta</span>
+                </LegendText>
+              </HeatMapLegend>
+            </HeatMapHeader>
+            
+            {/* Mapa de calor organizado por dias da semana e períodos do dia */}
+            <WeekdayHeatMap>
+              <EmptyCell /> {/* Célula vazia no canto superior esquerdo */}
+              
+              {/* Rótulos dos dias da semana */}
+              <WeekdayLabel>Dom</WeekdayLabel>
+              <WeekdayLabel>Seg</WeekdayLabel>
+              <WeekdayLabel>Ter</WeekdayLabel>
+              <WeekdayLabel>Qua</WeekdayLabel>
+              <WeekdayLabel>Qui</WeekdayLabel>
+              <WeekdayLabel>Sex</WeekdayLabel>
+              <WeekdayLabel>Sáb</WeekdayLabel>
+              
+              {/* Linha para Manhã */}
+              <DayRow>
+                <TimeLabel>Manhã</TimeLabel>
+                {(['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'] as const).map((day) => {
+                  const item = activityHeatMapData.find(i => i.key === `${day}-Manhã`);
+                  return (
+                    <HeatMapCell 
+                      key={`${day}-Manhã`} 
+                      intensity={item?.intensity || 0}
+                      title={`${day}, período da manhã: ${item?.value || 0} tarefas`}
+                    >
+                      {item?.value || 0}
+                    </HeatMapCell>
+                  );
+                })}
+              </DayRow>
+              
+              {/* Linha para Tarde */}
+              <DayRow>
+                <TimeLabel>Tarde</TimeLabel>
+                {(['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'] as const).map((day) => {
+                  const item = activityHeatMapData.find(i => i.key === `${day}-Tarde`);
+                  return (
+                    <HeatMapCell 
+                      key={`${day}-Tarde`} 
+                      intensity={item?.intensity || 0}
+                      title={`${day}, período da tarde: ${item?.value || 0} tarefas`}
+                    >
+                      {item?.value || 0}
+                    </HeatMapCell>
+                  );
+                })}
+              </DayRow>
+              
+              {/* Linha para Noite */}
+              <DayRow>
+                <TimeLabel>Noite</TimeLabel>
+                {(['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'] as const).map((day) => {
+                  const item = activityHeatMapData.find(i => i.key === `${day}-Noite`);
+                  return (
+                    <HeatMapCell 
+                      key={`${day}-Noite`} 
+                      intensity={item?.intensity || 0}
+                      title={`${day}, período da noite: ${item?.value || 0} tarefas`}
+                    >
+                      {item?.value || 0}
+                    </HeatMapCell>
+                  );
+                })}
+              </DayRow>
+              
+              {/* Linha para Madrugada */}
+              <DayRow>
+                <TimeLabel>Madrugada</TimeLabel>
+                {(['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'] as const).map((day) => {
+                  const item = activityHeatMapData.find(i => i.key === `${day}-Madrugada`);
+                  return (
+                    <HeatMapCell 
+                      key={`${day}-Madrugada`} 
+                      intensity={item?.intensity || 0}
+                      title={`${day}, madrugada: ${item?.value || 0} tarefas`}
+                    >
+                      {item?.value || 0}
+                    </HeatMapCell>
+                  );
+                })}
+              </DayRow>
+            </WeekdayHeatMap>
           </HeatMapContainer>
         </ChartContainer>
       </ChartSection>
