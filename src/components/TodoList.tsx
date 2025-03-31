@@ -70,7 +70,7 @@ const FilterGroup = styled.div`
   @media (max-width: 480px) {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
+  gap: 0.5rem;
   }
 `;
 
@@ -313,7 +313,7 @@ const TodoList: React.FC = () => {
       {filteredTodos.length > 0 ? (
         <TodoListItems>
           <AutoSizer>
-            {({ width, height }) => {
+            {({ width, height }: Size) => {
               if (width === 0 || height === 0) {
                 console.error("AutoSizer retornou dimensões inválidas:", { width, height });
                 return null;

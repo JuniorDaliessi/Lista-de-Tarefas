@@ -17,7 +17,7 @@ interface TodoContextProps {
   setSearchQuery: (query: string) => void;
   setSearchType: (type: 'title' | 'description' | 'category' | 'all') => void;
   setActiveCategory: (category: string) => void;
-  addTodo: (todo: Omit<Todo, 'id' | 'createdAt' | 'subtasks'>) => void;
+  addTodo: (todo: Omit<Todo, 'id' | 'createdAt'>) => void;
   updateTodo: (todo: Todo) => void;
   deleteTodo: (id: string) => void;
   toggleTodoCompletion: (id: string) => void;
@@ -53,7 +53,7 @@ export const TodoProvider: React.FC<TodoProviderProps> = ({ children }) => {
   useEffect(() => {
     try {
       setIsLoading(true);
-      const storedTodos = LocalStorageService.getTodos();
+    const storedTodos = LocalStorageService.getTodos();
       
       // Garantir que todos os todos tenham a propriedade subtasks
       const updatedTodos = storedTodos.map(todo => ({
@@ -157,12 +157,12 @@ export const TodoProvider: React.FC<TodoProviderProps> = ({ children }) => {
   }, [todos, filter, sortBy, searchQuery, searchType, activeCategory]);
 
   // Função para adicionar uma nova tarefa
-  const addTodo = useCallback((todo: Omit<Todo, 'id' | 'createdAt' | 'subtasks'>) => {
+  const addTodo = useCallback((todo: Omit<Todo, 'id' | 'createdAt'>) => {
     const newTodo: Todo = {
       ...todo,
       id: uuidv4(),
       createdAt: new Date().toISOString(),
-      subtasks: []
+      subtasks: todo.subtasks || []
     };
     
     setTodos(prev => [...prev, newTodo]);
@@ -302,16 +302,16 @@ export const TodoProvider: React.FC<TodoProviderProps> = ({ children }) => {
   return (
     <TodoContext.Provider
       value={{
-        todos,
-        filteredTodos,
-        filter,
-        sortBy,
+    todos,
+    filteredTodos,
+    filter,
+    sortBy,
         searchQuery,
         searchType,
         categories,
         activeCategory,
-        setFilter,
-        setSortBy,
+    setFilter,
+    setSortBy,
         setSearchQuery,
         setSearchType,
         setActiveCategory,

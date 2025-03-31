@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
 import styled from 'styled-components';
-import { FaPlus, FaSave, FaTimes, FaRegCalendarAlt, FaFlag, FaTags, FaCheck } from 'react-icons/fa';
-import { Todo } from '../types/Todo';
+import { FaPlus, FaSave, FaTimes, FaRegCalendarAlt, FaFlag, FaTags, FaCheck, FaTrash, FaTasks, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { Todo, SubTask } from '../types/Todo';
 import { useTodo } from '../contexts/TodoContext';
+import { v4 as uuidv4 } from 'uuid';
 
 interface TodoFormProps {
   editTodo?: Todo;
@@ -285,6 +286,123 @@ const CancelButton = styled(Button)`
   }
 `;
 
+const SubtasksSection = styled.div`
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  background-color: var(--background-primary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+`;
+
+const SubtasksHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  background-color: var(--background-secondary);
+  cursor: pointer;
+  
+  h4 {
+    margin: 0;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    
+    svg {
+      margin-right: 0.5rem;
+      color: var(--accent-color);
+    }
+  }
+`;
+
+const SubtasksList = styled.div`
+  padding: 0.5rem 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+`;
+
+const SubtaskItem = styled.div<{ completed: boolean }>`
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-color);
+  opacity: ${props => props.completed ? 0.7 : 1};
+  
+  span {
+    flex: 1;
+    margin: 0 0.5rem;
+    text-decoration: ${props => props.completed ? 'line-through' : 'none'};
+  }
+  
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const SubtaskCheckbox = styled.div`
+  width: 1.2rem;
+  height: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--success-color);
+`;
+
+const SubtaskDeleteButton = styled.button`
+  background: none;
+  border: none;
+  color: var(--error-color);
+  cursor: pointer;
+  padding: 0.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  
+  &:hover {
+    opacity: 1;
+  }
+`;
+
+const AddSubtaskForm = styled.div`
+  display: flex;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--border-color);
+  
+  input {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+    font-size: 0.9rem;
+    background-color: var(--background-primary);
+    color: var(--text-primary);
+    
+    &:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+  }
+  
+  button {
+    padding: 0.5rem 0.8rem;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    &:hover {
+      background-color: var(--accent-dark);
+    }
+  }
+`;
+
 const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
   const { addTodo, updateTodo, categories } = useTodo();
   const [title, setTitle] = useState('');
@@ -299,6 +417,11 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
   const formRef = useRef<HTMLFormElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   
+  // Subtasks state
+  const [subtasks, setSubtasks] = useState<SubTask[]>([]);
+  const [newSubtask, setNewSubtask] = useState('');
+  const [showSubtasks, setShowSubtasks] = useState(false);
+  
   // Preencher o formulário se estiver editando uma tarefa existente
   useEffect(() => {
     if (editTodo) {
@@ -307,6 +430,8 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
       setDate(editTodo.date ? editTodo.date.slice(0, 10) : '');
       setPriority(editTodo.priority);
       setCategory(editTodo.category || '');
+      setSubtasks(editTodo.subtasks || []);
+      setShowSubtasks(editTodo.subtasks && editTodo.subtasks.length > 0);
     }
     
     // Focar no campo de título ao montar o componente
@@ -357,6 +482,34 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
     setPriority('média');
     setCategory('');
     setNewCategory('');
+    setSubtasks([]);
+    setNewSubtask('');
+    setShowSubtasks(false);
+  }, []);
+
+  // Subtask handlers
+  const handleAddSubtask = useCallback(() => {
+    if (!newSubtask.trim()) return;
+    
+    const newSubtaskItem: SubTask = {
+      id: uuidv4(),
+      title: newSubtask.trim(),
+      completed: false,
+      createdAt: new Date().toISOString()
+    };
+    
+    setSubtasks(prev => [...prev, newSubtaskItem]);
+    setNewSubtask('');
+  }, [newSubtask]);
+  
+  const handleDeleteSubtask = useCallback((id: string) => {
+    setSubtasks(prev => prev.filter(subtask => subtask.id !== id));
+  }, []);
+  
+  const handleToggleSubtask = useCallback((id: string) => {
+    setSubtasks(prev => prev.map(subtask => 
+      subtask.id === id ? { ...subtask, completed: !subtask.completed } : subtask
+    ));
   }, []);
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
@@ -392,12 +545,12 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
           ...todoData, 
           id: editTodo.id, 
           createdAt: editTodo.createdAt,
-          subtasks: editTodo.subtasks 
+          subtasks 
         });
       } else {
         addTodo({
           ...todoData,
-          // A propriedade subtasks será adicionada automaticamente pelo addTodo
+          subtasks
         });
       }
 
@@ -422,7 +575,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [title, description, date, priority, category, newCategory, editTodo, addTodo, updateTodo, resetForm, onCancel]);
+  }, [title, description, date, priority, category, newCategory, subtasks, editTodo, addTodo, updateTodo, resetForm, onCancel]);
 
   return (
     <FormContainer onSubmit={handleSubmit} ref={formRef} aria-labelledby="form-title">
@@ -544,6 +697,61 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
           />
         </FormGroup>
       )}
+      
+      <FormGroup>
+        <Label htmlFor="subtasks">
+          <FaTasks aria-hidden="true" />
+          Subtarefas
+        </Label>
+        <SubtasksSection>
+          <SubtasksHeader onClick={() => setShowSubtasks(!showSubtasks)}>
+            <h4>
+              <FaTasks />
+              Subtarefas ({subtasks.filter(s => s.completed).length}/{subtasks.length})
+            </h4>
+            {showSubtasks ? <FaChevronUp /> : <FaChevronDown />}
+          </SubtasksHeader>
+          
+          {showSubtasks && subtasks.length > 0 && (
+            <SubtasksList>
+              {subtasks.map(subtask => (
+                <SubtaskItem key={subtask.id} completed={subtask.completed}>
+                  <SubtaskCheckbox 
+                    onClick={() => handleToggleSubtask(subtask.id)}
+                    aria-label={subtask.completed ? "Marcar como pendente" : "Marcar como concluída"}
+                  >
+                    {subtask.completed ? <FaCheck /> : <div style={{ width: '1em', height: '1em', border: '1px solid var(--accent-color)', borderRadius: '50%' }} />}
+                  </SubtaskCheckbox>
+                  <span>{subtask.title}</span>
+                  <SubtaskDeleteButton 
+                    onClick={() => handleDeleteSubtask(subtask.id)}
+                    aria-label="Excluir subtarefa"
+                    type="button"
+                  >
+                    <FaTrash size={12} />
+                  </SubtaskDeleteButton>
+                </SubtaskItem>
+              ))}
+            </SubtasksList>
+          )}
+          
+          <AddSubtaskForm>
+            <input
+              type="text"
+              placeholder="Adicionar subtarefa..."
+              value={newSubtask}
+              onChange={(e) => setNewSubtask(e.target.value)}
+            />
+            <button 
+              type="button" 
+              aria-label="Adicionar subtarefa"
+              onClick={handleAddSubtask}
+            >
+              <FaPlus />
+            </button>
+          </AddSubtaskForm>
+        </SubtasksSection>
+      </FormGroup>
 
       <ButtonGroup>
         {onCancel && (
