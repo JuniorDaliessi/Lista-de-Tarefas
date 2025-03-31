@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useTodo } from '../contexts/TodoContext';
 import TodoItem from '../components/TodoItem';
-import { FaFilter, FaSearch } from 'react-icons/fa';
+import { FaFilter, FaSort } from 'react-icons/fa';
+import SearchAutocomplete from '../components/SearchAutocomplete';
 
 const FiltersPageContainer = styled.div`
   max-width: 800px;
@@ -78,33 +80,6 @@ const FilterOption = styled.div<{ active: boolean }>`
   }
 `;
 
-const SearchContainer = styled.div`
-  position: relative;
-  margin-bottom: 1.5rem;
-`;
-
-const SearchInput = styled.input`
-  width: 100%;
-  padding: 0.8rem 1rem 0.8rem 2.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  
-  &:focus {
-    outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-  }
-`;
-
-const SearchIcon = styled.span`
-  position: absolute;
-  left: 0.8rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #999;
-`;
-
 const ResultsContainer = styled.div`
   margin-top: 2rem;
 `;
@@ -132,11 +107,40 @@ const EmptyResults = styled.div`
   font-size: 1.1rem;
 `;
 
+// Estilizando nosso componente SearchAutocomplete para corresponder ao estilo da página
+const StyledSearchAutocomplete = styled(SearchAutocomplete)`
+  margin-bottom: 1.5rem;
+`;
+
 const FiltersPage: React.FC = () => {
-  const { todos } = useTodo();
+  const { todos, sortBy, setSortBy } = useTodo();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todas');
   const [priorityFilter, setPriorityFilter] = useState('todas');
+  
+  // Extrair títulos únicos para o autocomplete
+  const todoTitles = useMemo(() => {
+    const titles = todos.map(todo => todo.title);
+    return Array.from(new Set(titles)); // Usar Array.from em vez de spread operator
+  }, [todos]);
+  
+  // Mapear títulos para IDs para facilitar a navegação
+  const titleToIdMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    todos.forEach(todo => {
+      map[todo.title] = todo.id;
+    });
+    return map;
+  }, [todos]);
+  
+  // Navegação para a página de detalhes quando uma sugestão for selecionada
+  const handleSuggestionSelect = useCallback((title: string) => {
+    const todoId = titleToIdMap[title];
+    if (todoId) {
+      navigate(`/tarefa/${todoId}`);
+    }
+  }, [navigate, titleToIdMap]);
   
   // Aplicar filtros às tarefas
   const filteredTodos = todos.filter(todo => {
@@ -155,6 +159,23 @@ const FiltersPage: React.FC = () => {
     return matchesSearchTerm && matchesStatus && matchesPriority;
   });
 
+  // Ordenar as tarefas com base no sortBy
+  const sortedTodos = [...filteredTodos].sort((a, b) => {
+    switch (sortBy) {
+      case 'data':
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      case 'prioridade':
+        const priorityValues = { alta: 0, média: 1, baixa: 2 };
+        return priorityValues[a.priority] - priorityValues[b.priority];
+      case 'alfabética':
+        return a.title.localeCompare(b.title);
+      case 'criação':
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      default:
+        return 0;
+    }
+  });
+
   return (
     <FiltersPageContainer>
       <PageHeader>
@@ -166,17 +187,13 @@ const FiltersPage: React.FC = () => {
       </PageHeader>
       
       <FiltersContainer>
-        <SearchContainer>
-          <SearchIcon>
-            <FaSearch />
-          </SearchIcon>
-          <SearchInput 
-            type="text" 
-            placeholder="Buscar tarefas por título ou descrição..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </SearchContainer>
+        <StyledSearchAutocomplete
+          placeholder="Buscar tarefas por título ou descrição..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+          suggestions={todoTitles}
+          onSuggestionSelect={handleSuggestionSelect}
+        />
         
         <FilterGroup>
           <FilterLabel>Status</FilterLabel>
@@ -231,16 +248,49 @@ const FiltersPage: React.FC = () => {
             </FilterOption>
           </FilterOptions>
         </FilterGroup>
+        
+        <FilterGroup>
+          <FilterLabel>
+            <FaSort />
+            Ordenar por
+          </FilterLabel>
+          <FilterOptions>
+            <FilterOption 
+              active={sortBy === 'data'} 
+              onClick={() => setSortBy('data')}
+            >
+              Data
+            </FilterOption>
+            <FilterOption 
+              active={sortBy === 'prioridade'} 
+              onClick={() => setSortBy('prioridade')}
+            >
+              Prioridade
+            </FilterOption>
+            <FilterOption 
+              active={sortBy === 'alfabética'} 
+              onClick={() => setSortBy('alfabética')}
+            >
+              Alfabética
+            </FilterOption>
+            <FilterOption 
+              active={sortBy === 'criação'} 
+              onClick={() => setSortBy('criação')}
+            >
+              Data de criação
+            </FilterOption>
+          </FilterOptions>
+        </FilterGroup>
       </FiltersContainer>
       
       <ResultsContainer>
         <ResultsHeader>
           <h2>Resultados</h2>
-          <ResultsCount>{filteredTodos.length} tarefas encontradas</ResultsCount>
+          <ResultsCount>{sortedTodos.length} tarefas encontradas</ResultsCount>
         </ResultsHeader>
         
-        {filteredTodos.length > 0 ? (
-          filteredTodos.map(todo => <TodoItem key={todo.id} todo={todo} />)
+        {sortedTodos.length > 0 ? (
+          sortedTodos.map(todo => <TodoItem key={todo.id} todo={todo} />)
         ) : (
           <EmptyResults>
             Nenhuma tarefa encontrada com os filtros aplicados

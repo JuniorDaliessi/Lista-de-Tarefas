@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaTasks, FaSearch } from 'react-icons/fa';
+import { FaTasks } from 'react-icons/fa';
 import TodoForm from '../components/TodoForm';
-import TodoList from '../components/TodoList';
 import { useTodo } from '../contexts/TodoContext';
+import SearchAutocomplete from '../components/SearchAutocomplete';
 
 const HomeContainer = styled.div`
   max-width: 900px;
@@ -59,55 +60,12 @@ const HomeSubtitle = styled.p`
   }
 `;
 
-const SearchBar = styled.div`
-  position: relative;
+const StyledSearchAutocomplete = styled(SearchAutocomplete)`
   max-width: 600px;
   margin: 0 auto 2rem;
   
-  input {
-    width: 100%;
-    padding: 0.8rem 1rem 0.8rem 3rem;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-    background-color: var(--background-primary);
-    color: var(--text-primary);
-    font-size: 1rem;
-    transition: all var(--transition-fast);
-    
-    &:focus {
-      border-color: var(--accent-color);
-      box-shadow: 0 0 0 3px rgba(79, 134, 247, 0.15);
-      outline: none;
-    }
-  }
-  
-  svg {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-    pointer-events: none;
-    transition: color var(--transition-fast);
-  }
-  
-  input:focus + svg {
-    color: var(--accent-color);
-  }
-  
   @media (max-width: 768px) {
     margin-bottom: 1.5rem;
-    
-    input {
-      padding: 0.7rem 1rem 0.7rem 2.8rem;
-      font-size: 0.95rem;
-    }
-    
-    svg {
-      font-size: 1rem;
-      left: 0.9rem;
-    }
   }
 `;
 
@@ -154,12 +112,36 @@ const StatValue = styled.div`
 
 const HomePage: React.FC = () => {
   const { searchQuery, setSearchQuery, todos } = useTodo();
+  const navigate = useNavigate();
   
   // Calcular estatísticas
   const totalTasks = todos.length;
   const completedTasks = todos.filter(todo => todo.completed).length;
   const pendingTasks = totalTasks - completedTasks;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  
+  // Extrair títulos únicos para o autocomplete
+  const todoTitles = useMemo(() => {
+    const titles = todos.map(todo => todo.title);
+    return Array.from(new Set(titles)); // Usar Array.from em vez de spread operator
+  }, [todos]);
+  
+  // Mapear títulos para IDs para facilitar a navegação
+  const titleToIdMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    todos.forEach(todo => {
+      map[todo.title] = todo.id;
+    });
+    return map;
+  }, [todos]);
+  
+  // Navegação para a página de detalhes quando uma sugestão for selecionada
+  const handleSuggestionSelect = useCallback((title: string) => {
+    const todoId = titleToIdMap[title];
+    if (todoId) {
+      navigate(`/tarefa/${todoId}`);
+    }
+  }, [navigate, titleToIdMap]);
   
   return (
     <HomeContainer>
@@ -174,15 +156,13 @@ const HomePage: React.FC = () => {
         </HomeSubtitle>
       </HomeHeader>
       
-      <SearchBar>
-        <input 
-          type="text" 
-          placeholder="Buscar tarefas..." 
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <FaSearch />
-      </SearchBar>
+      <StyledSearchAutocomplete
+        placeholder="Buscar tarefas..."
+        value={searchQuery}
+        onChange={setSearchQuery}
+        suggestions={todoTitles}
+        onSuggestionSelect={handleSuggestionSelect}
+      />
       
       <StatsBar>
         <StatItem>
@@ -205,7 +185,6 @@ const HomePage: React.FC = () => {
       
       <main>
         <TodoForm />
-        <TodoList />
       </main>
     </HomeContainer>
   );

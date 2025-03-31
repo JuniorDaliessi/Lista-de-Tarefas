@@ -1,4 +1,5 @@
 import React, { useState, useCallback, memo, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FaEdit, FaTrash, FaCheck, FaTag, FaClock, FaRegCalendarAlt, FaPlus, FaTasks, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { Todo, SubTask } from '../types/Todo';
@@ -103,6 +104,11 @@ const TodoTitle = styled.h3<{ completed: boolean }>`
   opacity: ${(props) => (props.completed ? 0.7 : 1)};
   word-break: break-word;
   transition: opacity var(--transition-fast), color var(--transition-fast);
+  cursor: pointer;
+  
+  &:hover {
+    color: var(--accent-color);
+  }
 `;
 
 const TodoDescription = styled.p<{ completed: boolean }>`
@@ -435,6 +441,7 @@ const SubtaskStats = styled.span`
 
 const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
   const { toggleTodoCompletion, deleteTodo, updateTodo, addSubtask, toggleSubtaskCompletion, deleteSubtask } = useTodo();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -502,6 +509,10 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
   const completedSubtasks = todo.subtasks.filter(subtask => subtask.completed).length;
   const totalSubtasks = todo.subtasks.length;
 
+  const handleTitleClick = useCallback(() => {
+    navigate(`/tarefa/${todo.id}`);
+  }, [navigate, todo.id]);
+
   if (isEditing) {
     return <TodoForm editTodo={todo} onCancel={() => handleSetEditing(false)} />;
   }
@@ -520,6 +531,10 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
           <TodoTitle 
             completed={todo.completed}
             aria-checked={todo.completed}
+            onClick={handleTitleClick}
+            onKeyDown={(e) => handleKeyDown(e, handleTitleClick)}
+            tabIndex={0}
+            role="button"
           >
             {todo.title}
           </TodoTitle>

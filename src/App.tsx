@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import FiltersPage from './pages/FiltersPage';
 import AllTodosPage from './pages/AllTodosPage';
 import DashboardPage from './pages/DashboardPage';
+import TaskDetailPage from './pages/TaskDetailPage';
 import { GlobalStyles } from './styles/GlobalStyles';
 import Tutorial from './components/Tutorial';
 
@@ -96,6 +97,7 @@ function App() {
                   <Route path="filtros" element={<FiltersPage />} />
                   <Route path="todas-tarefas" element={<AllTodosPage />} />
                   <Route path="dashboard" element={<DashboardPage />} />
+                  <Route path="tarefa/:id" element={<TaskDetailPage />} />
                 </Route>
               </Routes>
             </BrowserRouter>
