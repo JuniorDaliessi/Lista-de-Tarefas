@@ -478,8 +478,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar, isMobile }) => 
         
         <NavItem>
           <StyledNavLink to="/kanban" onClick={handleNavClick}>
-            <span><FaColumns /></span>
-            Kanban
+            <Icon>
+              <FaColumns />
+            </Icon>
+            <Text>Kanban</Text>
           </StyledNavLink>
         </NavItem>
       </NavMenu>
