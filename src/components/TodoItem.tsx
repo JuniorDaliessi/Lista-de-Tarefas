@@ -1,7 +1,7 @@
 import React, { useState, useCallback, memo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaEdit, FaTrash, FaCheck, FaTag, FaClock, FaRegCalendarAlt, FaPlus, FaTasks, FaChevronDown, FaChevronUp, FaProjectDiagram, FaExclamationTriangle } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaCheck, FaTag, FaClock, FaRegCalendarAlt, FaPlus, FaTasks, FaChevronDown, FaChevronUp, FaProjectDiagram, FaExclamationTriangle, FaColumns } from 'react-icons/fa';
 import { Todo, SubTask } from '../types/Todo';
 import { useTodo } from '../contexts/TodoContext';
 import { useProject } from '../contexts/ProjectContext';
@@ -212,6 +212,24 @@ const ProjectBadge = styled.span`
   &:hover {
     background-color: var(--accent-color);
     color: white;
+  }
+`;
+
+const KanbanStatusBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: var(--background-secondary);
+  color: var(--text-secondary);
+  gap: 0.3rem;
+  border: 1px dashed var(--border-color);
+  transition: background-color var(--transition-fast);
+  
+  &:hover {
+    background-color: var(--background-tertiary);
   }
 `;
 
@@ -503,6 +521,11 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
 
   // Encontrar o projeto associado à tarefa
   const associatedProject = todo.projectId ? projects.find(project => project.id === todo.projectId) : null;
+  
+  // Encontrar a coluna (andamento) atual da tarefa
+  const currentColumn = associatedProject && todo.columnId 
+    ? associatedProject.columns.find(column => column.id === todo.columnId)
+    : null;
 
   // Verificar se a tarefa está em atraso
   const isOverdue = useCallback(() => {
@@ -696,6 +719,16 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
               <FaProjectDiagram size={10} aria-hidden="true" />
               {associatedProject.name}
             </ProjectBadge>
+          </TodoMetaItem>
+        )}
+        
+        {/* Exibir badge do andamento do projeto se a tarefa tiver uma coluna associada */}
+        {currentColumn && (
+          <TodoMetaItem>
+            <KanbanStatusBadge>
+              <FaColumns size={10} aria-hidden="true" />
+              {currentColumn.title}
+            </KanbanStatusBadge>
           </TodoMetaItem>
         )}
       </TodoMeta>
