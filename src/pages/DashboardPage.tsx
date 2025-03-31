@@ -425,17 +425,28 @@ const HeatMapContainer = styled.div`
   flex-direction: column;
   gap: 1.5rem;
   margin-top: 1rem;
+  
+  @media (max-width: 480px) {
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 0.5rem;
+  }
 `;
 
 const HeatMapHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 1rem;
   
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 0.8rem;
+  }
+  
+  @media (max-width: 480px) {
+    margin-bottom: 0.8rem;
   }
 `;
 
@@ -482,12 +493,30 @@ const WeekdayHeatMap = styled.div`
   
   @media (max-width: 768px) {
     grid-template-columns: 60px repeat(7, 1fr);
+    gap: 0.3rem;
   }
   
   @media (max-width: 480px) {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    display: grid;
+    grid-template-columns: auto repeat(7, 1fr);
+    gap: 0.2rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    width: 100%;
+    scrollbar-width: thin;
+    
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: var(--background-secondary);
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--border-color);
+      border-radius: 4px;
+    }
   }
 `;
 
@@ -500,10 +529,16 @@ const TimeLabel = styled.div`
   justify-content: flex-end;
   padding-right: 0.5rem;
   
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    padding-right: 0.3rem;
+  }
+  
   @media (max-width: 480px) {
-    justify-content: flex-start;
-    margin-bottom: 0.25rem;
-    font-weight: 600;
+    font-size: 0.75rem;
+    padding-right: 0.3rem;
+    justify-content: center;
+    white-space: nowrap;
   }
 `;
 
@@ -514,11 +549,14 @@ const WeekdayLabel = styled.div`
   text-align: center;
   padding-bottom: 0.25rem;
   
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+  }
+  
   @media (max-width: 480px) {
-    grid-column: 1 / -1;
-    text-align: left;
-    margin-bottom: 0.25rem;
-    font-weight: 600;
+    font-size: 0.75rem;
+    text-align: center;
+    padding: 0.2rem 0;
   }
 `;
 
@@ -526,18 +564,7 @@ const DayRow = styled.div`
   display: contents;
   
   @media (max-width: 480px) {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 0.5rem;
-  }
-`;
-
-const MobileTimeRow = styled.div`
-  display: none;
-  
-  @media (max-width: 480px) {
-    display: flex;
-    margin-bottom: 0.25rem;
+    display: contents;
   }
 `;
 
@@ -565,20 +592,22 @@ const HeatMapCell = styled.div<{ intensity: number }>`
   
   @media (max-width: 768px) {
     font-size: 0.75rem;
+    padding: 0.4rem;
   }
   
   @media (max-width: 480px) {
-    aspect-ratio: auto;
-    padding: 0.5rem;
-    height: auto;
+    font-size: 0.7rem;
+    padding: 0.3rem;
+    min-width: 24px;
+    min-height: 24px;
+    aspect-ratio: 1;
   }
 `;
 
 const EmptyCell = styled.div`
-  aspect-ratio: 1;
-  
   @media (max-width: 480px) {
-    display: none;
+    grid-column: 1;
+    grid-row: 1;
   }
 `;
 
