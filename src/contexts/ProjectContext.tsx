@@ -35,6 +35,7 @@ interface ProjectContextProps {
   moveTodoToColumn: (todoId: string, targetColumnId: string, newOrder?: number) => void;
   reorderTodoInColumn: (todoId: string, newOrder: number) => void;
   advanceTaskStatus: (todoId: string) => { success: boolean; message?: string };
+  regressTaskStatus: (todoId: string) => { success: boolean; message?: string };
   
   // Metrics
   getLeadTime: (todoId: string) => number | null; // in milliseconds
@@ -601,6 +602,51 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     return { success: true };
   }, [todos, projects, moveTodoToColumn]);
 
+  // Adicionar a função regressTaskStatus após advanceTaskStatus
+  const regressTaskStatus = useCallback((todoId: string): { success: boolean; message?: string } => {
+    const todo = todos.find(t => t.id === todoId);
+    if (!todo || !todo.projectId || !todo.columnId) {
+      return { success: false, message: 'Tarefa não está associada a um projeto ou coluna' };
+    }
+    
+    const project = projects.find(p => p.id === todo.projectId);
+    if (!project) {
+      return { success: false, message: 'Projeto não encontrado' };
+    }
+    
+    // Ordenar colunas por ordem
+    const orderedColumns = [...project.columns].sort((a, b) => a.order - b.order);
+    
+    // Encontrar a coluna atual
+    const currentColumnIndex = orderedColumns.findIndex(col => col.id === todo.columnId);
+    if (currentColumnIndex === -1) {
+      return { success: false, message: 'Coluna atual não encontrada' };
+    }
+    
+    // Verificar se é a primeira coluna
+    if (currentColumnIndex === 0) {
+      return { success: false, message: 'Tarefa já está na primeira coluna' };
+    }
+    
+    // Identificar a coluna anterior
+    const previousColumn = orderedColumns[currentColumnIndex - 1];
+    
+    // Mover a tarefa para a coluna anterior
+    moveTodoToColumn(todoId, previousColumn.id);
+    
+    // Se movendo de "done" para qualquer outra coluna, remover o status de concluído
+    if (todo.columnId === 'done' && todo.completed) {
+      updateTodo({
+        ...todo,
+        columnId: previousColumn.id,
+        completed: false,
+        completedAt: undefined
+      });
+    }
+    
+    return { success: true, message: `Tarefa movida para ${previousColumn.title}` };
+  }, [todos, projects, moveTodoToColumn, updateTodo]);
+
   const value = useMemo(() => ({
     projects,
     activeProjectId,
@@ -617,6 +663,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     moveTodoToColumn,
     reorderTodoInColumn,
     advanceTaskStatus,
+    regressTaskStatus,
     getLeadTime,
     getCycleTime,
     isLoading,
@@ -637,6 +684,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     moveTodoToColumn,
     reorderTodoInColumn,
     advanceTaskStatus,
+    regressTaskStatus,
     getLeadTime,
     getCycleTime,
     isLoading,

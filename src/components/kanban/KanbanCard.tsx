@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Todo } from '../../types/Todo';
-import { FaCalendarAlt, FaTrash, FaCheck, FaClock, FaTag, FaProjectDiagram, FaArrowRight } from 'react-icons/fa';
+import { FaCalendarAlt, FaTrash, FaCheck, FaClock, FaTag, FaProjectDiagram, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
 import { useProject } from '../../contexts/ProjectContext';
 
 interface CardContainerProps {
@@ -364,12 +364,14 @@ interface KanbanCardProps {
 }
 
 const KanbanCard: React.FC<KanbanCardProps> = ({ todo, index, onClick, onRemove }) => {
-  const { projects, advanceTaskStatus } = useProject();
+  const { projects, advanceTaskStatus, regressTaskStatus } = useProject();
   const [isDragging, setIsDragging] = useState(false);
   const [advanceError, setAdvanceError] = useState<string | null>(null);
   const [advanceSuccess, setAdvanceSuccess] = useState(false);
+  const [regressSuccess, setRegressSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isAdvancing, setIsAdvancing] = useState(false);
+  const [isRegressing, setIsRegressing] = useState(false);
   
   // Encontrar o projeto associado à tarefa
   const associatedProject = todo.projectId ? projects.find(project => project.id === todo.projectId) : null;
@@ -377,10 +379,12 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ todo, index, onClick, onRemove 
   // Encontrar a coluna atual e a próxima (se houver)
   const currentProject = associatedProject;
   const currentColumn = currentProject?.columns.find(col => col.id === todo.columnId);
-  const isLastColumn = currentProject?.columns
-    .sort((a, b) => a.order - b.order)
-    .findIndex(col => col.id === todo.columnId) === 
-    (currentProject?.columns.length ?? 0) - 1;
+  
+  // Verificar se é a última ou a primeira coluna
+  const sortedColumns = currentProject?.columns.sort((a, b) => a.order - b.order) || [];
+  const currentColumnIndex = sortedColumns.findIndex(col => col.id === todo.columnId);
+  const isLastColumn = currentColumnIndex === sortedColumns.length - 1;
+  const isFirstColumn = currentColumnIndex === 0;
 
   const handleRemoveClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -435,6 +439,48 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ todo, index, onClick, onRemove 
       setTimeout(() => setAdvanceError(null), 3000);
     } finally {
       setIsAdvancing(false);
+    }
+  };
+  
+  const handleRegressStatus = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (!todo.projectId || !todo.columnId) {
+      setAdvanceError('Tarefa não está associada a um projeto ou coluna');
+      setTimeout(() => setAdvanceError(null), 3000);
+      return;
+    }
+    
+    if (isFirstColumn) {
+      setAdvanceError('Tarefa já está na primeira coluna');
+      setTimeout(() => setAdvanceError(null), 3000);
+      return;
+    }
+    
+    setIsRegressing(true);
+    
+    try {
+      const result = regressTaskStatus(todo.id);
+      if (!result.success) {
+        setAdvanceError(result.message || 'Não foi possível retornar o status');
+        setTimeout(() => setAdvanceError(null), 3000);
+      } else {
+        setRegressSuccess(true);
+        setSuccessMessage(result.message || 'Status retornado com sucesso!');
+        setTimeout(() => {
+          setSuccessMessage(null);
+        }, 2000);
+        
+        setTimeout(() => {
+          setRegressSuccess(false);
+        }, 1000);
+      }
+    } catch (error) {
+      setAdvanceError('Erro ao retornar status');
+      setTimeout(() => setAdvanceError(null), 3000);
+    } finally {
+      setIsRegressing(false);
     }
   };
   
@@ -552,6 +598,26 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ todo, index, onClick, onRemove 
             <ActionButtons>
               <ActionButtonWrapper>
                 <ActionButton 
+                  onClick={handleRegressStatus}
+                  title={isFirstColumn ? "Já está na primeira coluna" : "Voltar para etapa anterior"}
+                  aria-label={isFirstColumn ? "Já está na primeira coluna" : "Voltar para etapa anterior"}
+                  disabled={isFirstColumn || isRegressing}
+                  $isSuccess={regressSuccess}
+                >
+                  <FaArrowLeft size={14} />
+                </ActionButton>
+                {!isFirstColumn && currentProject && (
+                  <Tooltip>
+                    Voltar para: {
+                      sortedColumns
+                        [currentColumnIndex - 1]?.title || ''
+                    }
+                  </Tooltip>
+                )}
+              </ActionButtonWrapper>
+
+              <ActionButtonWrapper>
+                <ActionButton 
                   onClick={handleAdvanceStatus}
                   title={isLastColumn ? "Já está na última coluna" : "Avançar para próxima etapa"}
                   aria-label={isLastColumn ? "Já está na última coluna" : "Avançar para próxima etapa"}
@@ -563,9 +629,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ todo, index, onClick, onRemove 
                 {!isLastColumn && currentProject && (
                   <Tooltip>
                     Mover para: {
-                      currentProject.columns
-                        .sort((a, b) => a.order - b.order)
-                        [currentProject.columns.findIndex(col => col.id === todo.columnId) + 1]?.title || ''
+                      sortedColumns
+                        [currentColumnIndex + 1]?.title || ''
                     }
                   </Tooltip>
                 )}
