@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { FaPlus, FaEllipsisV, FaFilter, FaInfoCircle, FaColumns, FaSearch, FaTimes, FaChevronDown, FaChevronUp, FaEdit } from 'react-icons/fa';
+import { FaPlus, FaEllipsisV, FaFilter, FaInfoCircle, FaColumns, FaSearch, FaTimes, FaChevronDown, FaChevronUp, FaEdit, FaCog, FaTools } from 'react-icons/fa';
 import { useTodo } from '../contexts/TodoContext';
 import { useProject } from '../contexts/ProjectContext';
 import { Project } from '../types/Project';
@@ -383,21 +383,26 @@ const ProjectActions = styled.div`
   }
 `;
 
-const StyledMore = styled(FaEdit)`
+const StyledMore = styled(FaCog)`
   cursor: pointer;
-  color: var(--accent-color);
-  font-size: 1.2rem;
-  padding: 0.5rem;
+  color: var(--text-primary);
+  font-size: 1.3rem;
+  padding: 0.6rem;
   border-radius: 50%;
-  background: var(--background-primary);
+  background: var(--accent-color);
   transition: all 0.2s;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
   
   &:hover {
-    color: white;
-    background: var(--accent-color);
-    transform: scale(1.1);
+    color: var(--background-primary);
+    background: var(--accent-light);
+    transform: rotate(45deg);
+    box-shadow: var(--shadow-md);
+  }
+  
+  &:active {
+    transform: rotate(90deg);
   }
 `;
 
@@ -922,7 +927,7 @@ const KanbanPage: React.FC = () => {
               <ProjectDescription>{currentProject.description}</ProjectDescription>
             </ProjectDetails>
             <ProjectActions>
-              <StyledMore onClick={() => setShowEditProjectModal(true)} title="Editar projeto" />
+              <StyledMore onClick={() => setShowEditProjectModal(true)} title="Configurações do projeto" />
             </ProjectActions>
           </ProjectInfo>
           
