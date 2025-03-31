@@ -15,10 +15,6 @@ import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 // Declare o tipo ServiceWorkerGlobalScope para o self
 declare const self: ServiceWorkerGlobalScope;
 
-// Manter código descartável por segurança
-// @ts-ignore
-const ignored = self.__WB_MANIFEST;
-
 // Reclamar clientes assim que o service worker for ativado
 clientsClaim();
 
