@@ -3,10 +3,31 @@ import { Todo } from '../types/Todo';
 const STORAGE_KEY = 'todos';
 
 /**
+ * Verifica se o localStorage está disponível
+ * @returns true se o localStorage estiver disponível, false caso contrário
+ */
+export const isLocalStorageAvailable = (): boolean => {
+  try {
+    const testKey = '__test__';
+    localStorage.setItem(testKey, testKey);
+    const result = localStorage.getItem(testKey) === testKey;
+    localStorage.removeItem(testKey);
+    return result;
+  } catch (e) {
+    return false;
+  }
+};
+
+/**
  * Obtém todas as tarefas armazenadas no localStorage
  * @returns Lista de tarefas
  */
 export const getTodos = (): Todo[] => {
+  if (!isLocalStorageAvailable()) {
+    console.warn('LocalStorage não está disponível. Os dados não serão persistidos.');
+    return [];
+  }
+
   try {
     const storedTodos = localStorage.getItem(STORAGE_KEY);
     if (!storedTodos) {
@@ -29,7 +50,11 @@ export const getTodos = (): Todo[] => {
   } catch (error) {
     console.error('Erro ao carregar tarefas do localStorage:', error);
     // Em caso de erro, limpar localStorage para evitar problemas futuros
-    localStorage.removeItem(STORAGE_KEY);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {
+      // Ignorar erros ao tentar remover
+    }
     return [];
   }
 };
@@ -39,6 +64,11 @@ export const getTodos = (): Todo[] => {
  * @param todos Lista de tarefas a ser salva
  */
 export const saveTodos = (todos: Todo[]): void => {
+  if (!isLocalStorageAvailable()) {
+    console.warn('LocalStorage não está disponível. Os dados não serão persistidos.');
+    return;
+  }
+
   try {
     // Garantir que estamos salvando um array válido
     if (!Array.isArray(todos)) {
@@ -110,6 +140,11 @@ export const toggleTodoCompletion = (id: string): Todo[] => {
  * @returns Item parseado ou null se não existir
  */
 export const getItem = <T>(key: string): T | null => {
+  if (!isLocalStorageAvailable()) {
+    console.warn('LocalStorage não está disponível. Os dados não serão persistidos.');
+    return null;
+  }
+
   try {
     const item = localStorage.getItem(key);
     if (!item) {
@@ -128,6 +163,11 @@ export const getItem = <T>(key: string): T | null => {
  * @param value Valor a ser salvo
  */
 export const setItem = <T>(key: string, value: T): void => {
+  if (!isLocalStorageAvailable()) {
+    console.warn('LocalStorage não está disponível. Os dados não serão persistidos.');
+    return;
+  }
+
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - Todo App Kanban</title>
+  <style>
+    body {
+      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+      background-color: #f8f9fa;
+      color: #343a40;
+      text-align: center;
+    }
+    
+    .container {
+      max-width: 500px;
+      background-color: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      color: #4F86F7;
+      margin-bottom: 1rem;
+    }
+    
+    p {
+      color: #6c757d;
+      line-height: 1.6;
+    }
+    
+    .icon {
+      font-size: 4rem;
+      color: #4F86F7;
+      margin-bottom: 1rem;
+    }
+    
+    .retry-button {
+      background-color: #4F86F7;
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 1.5rem;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+    
+    .retry-button:hover {
+      background-color: #3a70e0;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #1a1a1a;
+        color: #f8f9fa;
+      }
+      
+      .container {
+        background-color: #2d2d2d;
+      }
+      
+      h1 {
+        color: #73a1ff;
+      }
+      
+      p {
+        color: #adb5bd;
+      }
+      
+      .icon {
+        color: #73a1ff;
+      }
+      
+      .retry-button {
+        background-color: #73a1ff;
+      }
+      
+      .retry-button:hover {
+        background-color: #5a8cff;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">🌩️</div>
+    <h1>Você está offline</h1>
+    <p>Não foi possível carregar o aplicativo porque você está sem conexão com a internet.</p>
+    <p>Suas tarefas já salvas estão seguras e serão carregadas assim que você estiver online novamente.</p>
+    <button class="retry-button" onclick="window.location.reload()">
+      Tentar Novamente
+    </button>
+  </div>
+  
+  <script>
+    // Verificar a conexão periodicamente
+    window.addEventListener('online', () => {
+      window.location.reload();
+    });
+  </script>
+</body>
+</html> 

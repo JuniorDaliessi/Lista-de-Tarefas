@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import { TodoProvider } from './contexts/TodoContext';
 import { ProjectProvider } from './contexts/ProjectContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -94,7 +94,7 @@ function App() {
             <ErrorBoundary>
               <ProjectProvider>
                 <GlobalStyles />
-                <BrowserRouter>
+                <HashRouter>
                   <Routes>
                     <Route path="/" element={<Layout />}>
                       <Route index element={<HomePage />} />
@@ -105,7 +105,7 @@ function App() {
                       <Route path="nova-tarefa" element={<NewTaskPage />} />
                     </Route>
                   </Routes>
-                </BrowserRouter>
+                </HashRouter>
                 
                 {showTutorial && <Tutorial onClose={handleCloseTutorial} />}
               </ProjectProvider>
