@@ -17,11 +17,11 @@ const ModalOverlay = styled.div`
 `;
 
 const ModalContent = styled.div`
-  background-color: white;
+  background-color: var(--background-secondary);
   border-radius: 8px;
   width: 90%;
   max-width: 500px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-md);
 `;
 
 const ModalHeader = styled.div`
@@ -29,12 +29,12 @@ const ModalHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border-color);
 `;
 
 const ModalTitle = styled.h3`
   margin: 0;
-  color: #333;
+  color: var(--text-primary);
 `;
 
 const CloseButton = styled.button`
@@ -42,10 +42,10 @@ const CloseButton = styled.button`
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
-  color: #777;
+  color: var(--text-secondary);
   
   &:hover {
-    color: #333;
+    color: var(--text-primary);
   }
 `;
 
@@ -60,37 +60,41 @@ const FormGroup = styled.div`
 const Label = styled.label`
   display: block;
   margin-bottom: 0.5rem;
-  color: #555;
+  color: var(--text-secondary);
   font-weight: 500;
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 0.8rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 1rem;
+  background-color: var(--background-primary);
+  color: var(--text-primary);
   
   &:focus {
     outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
   }
 `;
 
 const TextArea = styled.textarea`
   width: 100%;
   padding: 0.8rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 1rem;
   resize: vertical;
   min-height: 100px;
+  background-color: var(--background-primary);
+  color: var(--text-primary);
   
   &:focus {
     outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
   }
 `;
 
@@ -103,35 +107,37 @@ const ColumnItem = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 0.8rem;
-  border: 1px solid #eee;
+  background-color: var(--background-primary);
   border-radius: 4px;
   margin-bottom: 0.5rem;
+  border: 1px solid var(--border-color);
   
   &:hover {
-    background-color: #f9f9f9;
+    background-color: var(--hover-background);
   }
 `;
 
 const ColumnTitle = styled.div`
   font-weight: 500;
+  color: var(--text-primary);
 `;
 
 const ColumnWipLimit = styled.div`
   font-size: 0.85rem;
-  color: #777;
+  color: var(--text-secondary);
 `;
 
 const DeleteButton = styled.button`
   background: none;
   border: none;
-  color: #dc3545;
+  color: var(--error-color);
   cursor: pointer;
   display: flex;
   align-items: center;
   padding: 0.4rem;
   
   &:hover {
-    background-color: #ffebee;
+    background-color: var(--error-light);
     border-radius: 4px;
   }
   
@@ -143,26 +149,26 @@ const DeleteButton = styled.button`
 const DangerZone = styled.div`
   margin-top: 2rem;
   padding: 1rem;
-  border: 1px solid #dc3545;
+  border: 1px solid var(--error-color);
   border-radius: 4px;
-  background-color: #ffebee;
+  background-color: var(--error-light);
 `;
 
 const DangerTitle = styled.h4`
-  color: #dc3545;
+  color: var(--error-color);
   margin-top: 0;
   margin-bottom: 0.8rem;
 `;
 
 const DangerDescription = styled.p`
-  color: #555;
+  color: var(--text-primary);
   font-size: 0.9rem;
   margin-bottom: 1rem;
 `;
 
 const ModalFooter = styled.div`
   padding: 1rem 1.5rem;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--border-color);
   display: flex;
   justify-content: flex-end;
   gap: 0.8rem;
@@ -177,24 +183,24 @@ const Button = styled.button`
 `;
 
 const CancelButton = styled(Button)`
-  background-color: #f1f1f1;
-  color: #555;
-  border: none;
+  background-color: var(--background-primary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
   
   &:hover {
-    background-color: #e0e0e0;
+    background-color: var(--hover-background);
   }
 `;
 
 const SubmitButton = styled(Button)<{ disabled: boolean }>`
-  background-color: #3498db;
+  background-color: var(--accent-color);
   color: white;
   border: none;
   opacity: ${props => props.disabled ? 0.7 : 1};
   cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
   
   &:hover {
-    background-color: ${props => props.disabled ? '#3498db' : '#2980b9'};
+    background-color: ${props => props.disabled ? 'var(--accent-color)' : 'var(--accent-light)'};
   }
 `;
 
