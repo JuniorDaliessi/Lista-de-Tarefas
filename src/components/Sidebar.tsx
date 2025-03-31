@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { NavLink } from 'react-router-dom';
-import { FaHome, FaFilter, FaClipboardList, FaSun, FaMoon, FaSearch, FaTags, FaPlus, FaTimes, FaCheck, FaChartBar } from 'react-icons/fa';
+import { FaHome, FaFilter, FaSun, FaMoon, FaSearch, FaTags, FaPlus, FaTimes, FaCheck, FaChartBar, FaTasks } from 'react-icons/fa';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTodo } from '../contexts/TodoContext';
 
@@ -413,10 +413,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar, isMobile }) => 
         
         <LogoContainer>
           <Logo>
-            <FaClipboardList />
+            <FaTasks />
             <span>Todo App</span>
           </Logo>
-          <ThemeToggle onClick={toggleTheme} aria-label="Alternar tema">
+          <ThemeToggle onClick={toggleTheme} title={theme === 'light' ? 'Mudar para tema escuro' : 'Mudar para tema claro'}>
             {theme === 'light' ? <FaMoon /> : <FaSun />}
           </ThemeToggle>
         </LogoContainer>
@@ -450,13 +450,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar, isMobile }) => 
       
       <NavMenu>
         <NavItem>
-          <StyledNavLink to="/" end onClick={handleNavClick}>
+          <StyledNavLink to="/" onClick={handleNavClick}>
             <Icon>
               <FaHome />
             </Icon>
-            <Text>Início</Text>
+            <Text>Página Inicial</Text>
           </StyledNavLink>
         </NavItem>
+        
         <NavItem>
           <StyledNavLink to="/filtros" onClick={handleNavClick}>
             <Icon>
@@ -465,14 +466,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar, isMobile }) => 
             <Text>Filtros Avançados</Text>
           </StyledNavLink>
         </NavItem>
-        <NavItem>
-          <StyledNavLink to="/todas-tarefas" onClick={handleNavClick}>
-            <Icon>
-              <FaClipboardList />
-            </Icon>
-            <Text>Todas as Tarefas</Text>
-          </StyledNavLink>
-        </NavItem>
+        
         <NavItem>
           <StyledNavLink to="/dashboard" onClick={handleNavClick}>
             <Icon>

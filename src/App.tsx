@@ -5,7 +5,6 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import FiltersPage from './pages/FiltersPage';
-import AllTodosPage from './pages/AllTodosPage';
 import DashboardPage from './pages/DashboardPage';
 import TaskDetailPage from './pages/TaskDetailPage';
 import { GlobalStyles } from './styles/GlobalStyles';
@@ -95,7 +94,6 @@ function App() {
                 <Route path="/" element={<Layout />}>
                   <Route index element={<HomePage />} />
                   <Route path="filtros" element={<FiltersPage />} />
-                  <Route path="todas-tarefas" element={<AllTodosPage />} />
                   <Route path="dashboard" element={<DashboardPage />} />
                   <Route path="tarefa/:id" element={<TaskDetailPage />} />
                 </Route>
