@@ -212,24 +212,53 @@ const ProjectBadge = styled.span`
   &:hover {
     background-color: var(--accent-color);
     color: white;
+    
+    .project-status {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      
+      .status-icon {
+        color: white;
+      }
+    }
   }
-`;
-
-const KanbanStatusBadge = styled.span`
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.6rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 600;
-  background-color: var(--background-secondary);
-  color: var(--text-secondary);
-  gap: 0.3rem;
-  border: 1px dashed var(--border-color);
-  transition: background-color var(--transition-fast);
   
-  &:hover {
-    background-color: var(--background-tertiary);
+  .project-status {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 0.3rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    border-left: 1px solid var(--border-color);
+    background-color: var(--background-primary);
+    color: var(--text-primary);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    margin-right: -0.4rem;
+    font-weight: 700;
+    position: relative;
+    box-shadow: inset 1px 0 3px rgba(0, 0, 0, 0.05);
+    
+    &:before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 60%;
+      background-color: var(--border-color);
+      border-radius: 1px;
+    }
+    
+    svg {
+      margin-right: 0.3rem;
+      color: var(--text-primary);
+    }
+    
+    .status-icon {
+      color: var(--text-secondary);
+      transition: color var(--transition-fast);
+    }
   }
 `;
 
@@ -716,19 +745,26 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
         {associatedProject && (
           <TodoMetaItem>
             <ProjectBadge>
-              <FaProjectDiagram size={10} aria-hidden="true" />
-              {associatedProject.name}
+              <div>
+                <FaProjectDiagram size={10} aria-hidden="true" />
+                {associatedProject.name}
+              </div>
+              {currentColumn && (
+                <div className="project-status">
+                  <FaColumns 
+                    size={12} 
+                    aria-hidden="true" 
+                    className={`status-icon ${currentColumn.id}`}
+                    style={{
+                      color: currentColumn.id === 'done' ? 'var(--success-color)' : 
+                             currentColumn.id === 'in-progress' ? 'var(--accent-color)' :
+                             currentColumn.id === 'review' ? 'var(--warning-color)' : 'var(--text-secondary)'
+                    }}
+                  />
+                  {currentColumn.title}
+                </div>
+              )}
             </ProjectBadge>
-          </TodoMetaItem>
-        )}
-        
-        {/* Exibir badge do andamento do projeto se a tarefa tiver uma coluna associada */}
-        {currentColumn && (
-          <TodoMetaItem>
-            <KanbanStatusBadge>
-              <FaColumns size={10} aria-hidden="true" />
-              {currentColumn.title}
-            </KanbanStatusBadge>
           </TodoMetaItem>
         )}
       </TodoMeta>
