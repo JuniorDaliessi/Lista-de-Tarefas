@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, memo } from 'react';
 import styled from 'styled-components';
-import { FaSort, FaFilter, FaSearch, FaListUl, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { FaSort, FaFilter, FaSearch, FaListUl, FaCheckCircle, FaExclamationTriangle, FaClock } from 'react-icons/fa';
 import { useTodo } from '../contexts/TodoContext';
 import TodoItem from './TodoItem';
 import { FixedSizeList as List } from 'react-window';
@@ -173,6 +173,68 @@ const EmptyMessage = styled.div`
   }
 `;
 
+const StatsContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  
+  @media (max-width: 768px) {
+    margin-bottom: 1rem;
+  }
+`;
+
+const StatItem = styled.div<{ $type: 'normal' | 'success' | 'warning' | 'error' }>`
+  padding: 0.8rem 1.2rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  flex: 1;
+  min-width: 180px;
+  
+  ${props => {
+    switch (props.$type) {
+      case 'success':
+        return `
+          background-color: var(--success-light);
+          color: var(--success-color);
+        `;
+      case 'warning':
+        return `
+          background-color: var(--warning-light);
+          color: var(--warning-color);
+        `;
+      case 'error':
+        return `
+          background-color: var(--error-light);
+          color: var(--error-color);
+        `;
+      default:
+        return `
+          background-color: var(--background-secondary);
+          color: var(--text-primary);
+        `;
+    }
+  }}
+  
+  svg {
+    font-size: 1.2rem;
+  }
+  
+  span {
+    font-weight: 600;
+    margin-left: auto;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+`;
+
 // Altura média estimada de cada item de tarefa
 const ITEM_SIZE = 210;
 
@@ -183,7 +245,34 @@ interface Size {
 }
 
 const TodoList: React.FC = () => {
-  const { filteredTodos, filter, setFilter, sortBy, setSortBy, searchQuery } = useTodo();
+  const { filteredTodos, filter, setFilter, sortBy, setSortBy, searchQuery, todos } = useTodo();
+
+  // Calcular estatísticas
+  const stats = useMemo(() => {
+    // Filtrar tarefas atrasadas (não concluídas com data de vencimento no passado)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const overdueTasks = todos.filter(todo => {
+      if (todo.completed || !todo.date) return false;
+      const dueDate = new Date(todo.date);
+      dueDate.setHours(0, 0, 0, 0);
+      return dueDate < today;
+    });
+    
+    // Tarefas pendentes (não concluídas)
+    const pendingTasks = todos.filter(todo => !todo.completed);
+    
+    // Tarefas concluídas
+    const completedTasks = todos.filter(todo => todo.completed);
+    
+    return {
+      total: todos.length,
+      pending: pendingTasks.length,
+      completed: completedTasks.length,
+      overdue: overdueTasks.length
+    };
+  }, [todos]);
 
   const getListTitle = useCallback(() => {
     if (searchQuery) {
@@ -271,10 +360,34 @@ const TodoList: React.FC = () => {
   return (
     <ListContainer>
       <ListHeader>
-        <FaListUl />
+        <FaListUl aria-hidden="true" />
         <ListTitle>{listTitle}</ListTitle>
       </ListHeader>
       
+      {/* Estatísticas de tarefas */}
+      <StatsContainer>
+        <StatItem $type="normal">
+          <FaListUl />
+          Total de Tarefas
+          <span>{stats.total}</span>
+        </StatItem>
+        <StatItem $type="warning">
+          <FaClock />
+          Tarefas Pendentes
+          <span>{stats.pending}</span>
+        </StatItem>
+        <StatItem $type="success">
+          <FaCheckCircle />
+          Tarefas Concluídas
+          <span>{stats.completed}</span>
+        </StatItem>
+        <StatItem $type="error">
+          <FaExclamationTriangle />
+          Tarefas Atrasadas
+          <span>{stats.overdue}</span>
+        </StatItem>
+      </StatsContainer>
+
       <FilterContainer>
         <FilterGroup>
           <FilterLabel htmlFor="filter">
@@ -313,36 +426,58 @@ const TodoList: React.FC = () => {
       {filteredTodos.length > 0 ? (
         <TodoListItems>
           <AutoSizer>
-            {({ width, height }: Size) => {
-              if (width === 0 || height === 0) {
-                console.error("AutoSizer retornou dimensões inválidas:", { width, height });
-                return null;
-              }
-              
-              return (
-                <List
-                  width={width}
-                  height={height}
-                  itemCount={filteredTodos.length}
-                  itemSize={ITEM_SIZE}
-                  overscanCount={3}
-                >
-                  {Row}
-                </List>
-              );
-            }}
+            {({ height, width }: Size) => (
+              <List
+                height={height}
+                itemCount={filteredTodos.length}
+                itemSize={ITEM_SIZE}
+                width={width}
+              >
+                {({ index, style }) => (
+                  <div style={style}>
+                    <TodoItem key={filteredTodos[index].id} todo={filteredTodos[index]} />
+                  </div>
+                )}
+              </List>
+            )}
           </AutoSizer>
         </TodoListItems>
       ) : (
-        <EmptyMessage>
-          {getEmptyIcon()}
-          <strong>{getEmptyMessage()}</strong>
-          <p>
-            {searchQuery 
-              ? 'Tente usar termos de busca diferentes ou verifique se há erros de digitação.' 
-              : 'Use o formulário acima para adicionar sua primeira tarefa.'}
-          </p>
-        </EmptyMessage>
+        <>
+          {searchQuery ? (
+            <EmptyMessage>
+              <FaSearch />
+              <h3>Nenhuma tarefa encontrada</h3>
+              <p>Sua busca por "{searchQuery}" não retornou resultados.</p>
+            </EmptyMessage>
+          ) : filter === 'concluídas' ? (
+            <EmptyMessage>
+              <FaCheckCircle />
+              <h3>Nenhuma tarefa concluída</h3>
+              <p>Você ainda não concluiu nenhuma tarefa. Que tal completar algumas?</p>
+            </EmptyMessage>
+          ) : filter === 'pendentes' ? (
+            stats.overdue > 0 ? (
+              <EmptyMessage>
+                <FaExclamationTriangle />
+                <h3>Atenção: Tarefas Atrasadas</h3>
+                <p>Você tem {stats.overdue} {stats.overdue === 1 ? 'tarefa atrasada' : 'tarefas atrasadas'} que precisam de atenção.</p>
+              </EmptyMessage>
+            ) : (
+              <EmptyMessage>
+                <FaClock />
+                <h3>Nenhuma tarefa pendente</h3>
+                <p>Parabéns! Você completou todas as suas tarefas.</p>
+              </EmptyMessage>
+            )
+          ) : (
+            <EmptyMessage>
+              <FaListUl />
+              <h3>Sua lista está vazia</h3>
+              <p>Adicione algumas tarefas para começar a organizar seu trabalho.</p>
+            </EmptyMessage>
+          )}
+        </>
       )}
     </ListContainer>
   );

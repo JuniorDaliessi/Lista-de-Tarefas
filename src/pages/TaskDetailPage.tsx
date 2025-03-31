@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaArrowLeft, FaCalendarAlt, FaClock, FaTag, FaFlag, FaCheck, FaTimes, FaTasks, FaChevronDown, FaChevronUp, FaTrash, FaEdit } from 'react-icons/fa';
+import { FaArrowLeft, FaCalendarAlt, FaClock, FaTag, FaFlag, FaCheck, FaTimes, FaTasks, FaChevronDown, FaChevronUp, FaTrash, FaEdit, FaProjectDiagram, FaColumns, FaExclamationTriangle } from 'react-icons/fa';
 import { useTodo } from '../contexts/TodoContext';
+import { useProject } from '../contexts/ProjectContext';
 import TodoForm from '../components/TodoForm';
 
 const TaskDetailContainer = styled.div`
@@ -286,6 +287,64 @@ const SubtaskDeleteButton = styled.button`
   }
 `;
 
+const ProjectBadge = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--accent-light);
+  border-radius: var(--radius-md);
+  color: var(--accent-dark);
+  width: fit-content;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: var(--accent-color);
+    color: white;
+    transform: translateY(-2px);
+  }
+  
+  svg {
+    font-size: 1.2rem;
+  }
+`;
+
+const OverdueIndicator = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0.8rem 1.2rem;
+  background-color: var(--error-light);
+  color: var(--error-color);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  
+  svg {
+    font-size: 1.2rem;
+  }
+  
+  @media (max-width: 576px) {
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+  }
+`;
+
+const TaskDateMeta = styled(MetaItem)<{ isOverdue: boolean }>`
+  ${props => props.isOverdue && `
+    svg, ${MetaLabel}, ${MetaValue} {
+      color: var(--error-color);
+    }
+    
+    ${MetaValue} {
+      font-weight: bold;
+    }
+  `}
+`;
+
 const formatDate = (dateString: string) => {
   try {
     const date = new Date(dateString);
@@ -303,6 +362,7 @@ const formatDate = (dateString: string) => {
 const TaskDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { todos, updateTodo, deleteTodo, toggleTodoCompletion, toggleSubtaskCompletion, deleteSubtask } = useTodo();
+  const { projects, setActiveProjectId } = useProject();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [showSubtasks, setShowSubtasks] = useState(true);
@@ -310,12 +370,52 @@ const TaskDetailPage: React.FC = () => {
   // Encontrar a tarefa pelo ID
   const todo = todos.find(todo => todo.id === id);
   
+  // Encontrar o projeto associado à tarefa
+  const associatedProject = todo?.projectId ? projects.find(project => project.id === todo.projectId) : null;
+  
+  // Verificar se a tarefa está em atraso
+  const isOverdue = useCallback(() => {
+    if (!todo || !todo.date || todo.completed) return false;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(todo.date);
+    dueDate.setHours(0, 0, 0, 0);
+    
+    return dueDate < today;
+  }, [todo]);
+
+  // Calcular dias de atraso ou dias restantes
+  const getDaysUntilDue = useCallback(() => {
+    if (!todo || !todo.date) return '';
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(todo.date);
+    dueDate.setHours(0, 0, 0, 0);
+    
+    const diffTime = dueDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return `Atrasado por ${Math.abs(diffDays)} dia(s)`;
+    if (diffDays === 0) return 'Vence hoje';
+    return `${diffDays} dia(s) restante(s)`;
+  }, [todo]);
+  
   // Redirecionar para a página inicial se a tarefa não for encontrada
   useEffect(() => {
     if (!todo && todos.length > 0) {
       navigate('/');
     }
   }, [todo, todos, navigate]);
+  
+  // Função para navegar para o quadro Kanban do projeto
+  const navigateToKanban = () => {
+    if (todo?.projectId) {
+      setActiveProjectId(todo.projectId);
+      navigate('/kanban');
+    }
+  };
   
   if (!todo) {
     return (
@@ -387,6 +487,14 @@ const TaskDetailPage: React.FC = () => {
           {todo.completed ? 'Tarefa Concluída' : 'Tarefa Pendente'}
         </CompletionStatus>
         
+        {/* Indicador de atraso para tarefas não concluídas */}
+        {isOverdue() && !todo.completed && (
+          <OverdueIndicator>
+            <FaExclamationTriangle />
+            <span>{getDaysUntilDue()}</span>
+          </OverdueIndicator>
+        )}
+        
         {todo.description && (
           <TaskDescription>
             <p>{todo.description}</p>
@@ -394,11 +502,11 @@ const TaskDetailPage: React.FC = () => {
         )}
         
         <TaskMeta>
-          <MetaItem>
+          <TaskDateMeta isOverdue={isOverdue()}>
             <FaCalendarAlt />
             <MetaLabel>Data:</MetaLabel>
             <MetaValue>{formatDate(todo.date)}</MetaValue>
-          </MetaItem>
+          </TaskDateMeta>
           
           <MetaItem>
             <FaClock />
@@ -424,6 +532,18 @@ const TaskDetailPage: React.FC = () => {
             </MetaItem>
           )}
         </TaskMeta>
+        
+        {/* Exibir o projeto associado e link para o Kanban */}
+        {associatedProject && (
+          <ProjectBadge onClick={navigateToKanban}>
+            <FaProjectDiagram />
+            <div>
+              <strong>Projeto:</strong> {associatedProject.name}
+            </div>
+            <FaColumns style={{ marginLeft: 'auto' }} />
+            <span>Ver no Kanban</span>
+          </ProjectBadge>
+        )}
         
         {todo.subtasks && todo.subtasks.length > 0 && (
           <SubtasksContainer>

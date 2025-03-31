@@ -1,7 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Todo } from '../../types/Todo';
-import { FaCalendarAlt, FaTrash, FaCheck, FaClock, FaTag } from 'react-icons/fa';
+import { FaCalendarAlt, FaTrash, FaCheck, FaClock, FaTag, FaProjectDiagram } from 'react-icons/fa';
+import { useProject } from '../../contexts/ProjectContext';
 
 interface CardContainerProps {
   $completed?: boolean;
@@ -223,6 +224,33 @@ const DeleteButton = styled.button`
   }
 `;
 
+const ProjectIndicator = styled.div`
+  display: flex;
+  align-items: center;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--accent-dark);
+  background-color: var(--accent-light);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  width: fit-content;
+  
+  svg {
+    margin-right: 0.3rem;
+    font-size: 0.7rem;
+  }
+  
+  /* Responsividade para telas menores */
+  @media (max-width: 480px) {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.4rem;
+    
+    svg {
+      font-size: 0.65rem;
+    }
+  }
+`;
+
 interface KanbanCardProps {
   todo: Todo;
   index: number;
@@ -231,6 +259,12 @@ interface KanbanCardProps {
 }
 
 const KanbanCard: React.FC<KanbanCardProps> = ({ todo, index, onClick, onRemove }) => {
+  const { projects } = useProject();
+  
+  // Encontrar o projeto associado à tarefa (mesmo que estejamos dentro de um projeto, 
+  // isso mostra claramente a qual projeto a tarefa pertence)
+  const associatedProject = todo.projectId ? projects.find(project => project.id === todo.projectId) : null;
+
   const handleRemoveClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent triggering card click
     onRemove();
@@ -276,28 +310,36 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ todo, index, onClick, onRemove 
         {todo.description && <CardDescription>{todo.description}</CardDescription>}
         
         <CardMeta>
-          <MetaItem>
-            <FaCalendarAlt />
-            {formatDate(todo.date)}
-          </MetaItem>
-          
+          {todo.date && (
+            <MetaItem>
+              <FaCalendarAlt />
+              <span>{formatDate(todo.date)}</span>
+            </MetaItem>
+          )}
           {todo.category && (
             <MetaItem>
               <FaTag />
-              {todo.category}
+              <span>{todo.category}</span>
             </MetaItem>
           )}
-          
           {!todo.completed && (
             <MetaItem style={{ 
               color: isPastDue() ? 'var(--error-color)' : 'inherit',
               fontWeight: isPastDue() ? 'bold' : 'normal'
             }}>
               <FaClock />
-              {getDaysUntilDue(todo.date)}
+              <span>{getDaysUntilDue(todo.date)}</span>
             </MetaItem>
           )}
         </CardMeta>
+        
+        {/* Indicador de projeto */}
+        {associatedProject && (
+          <ProjectIndicator>
+            <FaProjectDiagram />
+            <span>{associatedProject.name}</span>
+          </ProjectIndicator>
+        )}
         
         <CardFooter>
           <CardPriority priority={todo.priority}>

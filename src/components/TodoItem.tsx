@@ -1,9 +1,10 @@
 import React, { useState, useCallback, memo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaEdit, FaTrash, FaCheck, FaTag, FaClock, FaRegCalendarAlt, FaPlus, FaTasks, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaCheck, FaTag, FaClock, FaRegCalendarAlt, FaPlus, FaTasks, FaChevronDown, FaChevronUp, FaProjectDiagram, FaExclamationTriangle } from 'react-icons/fa';
 import { Todo, SubTask } from '../types/Todo';
 import { useTodo } from '../contexts/TodoContext';
+import { useProject } from '../contexts/ProjectContext';
 import TodoForm from './TodoForm';
 
 interface TodoItemProps {
@@ -194,6 +195,24 @@ const PriorityBadge = styled.span<{ priority: string }>`
         return 'var(--success-color)';
     }
   }};
+`;
+
+const ProjectBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: var(--accent-light);
+  color: var(--accent-dark);
+  gap: 0.3rem;
+  transition: background-color var(--transition-fast);
+  
+  &:hover {
+    background-color: var(--accent-color);
+    color: white;
+  }
 `;
 
 const ActionButtons = styled.div`
@@ -439,8 +458,41 @@ const SubtaskStats = styled.span`
   color: var(--text-tertiary);
 `;
 
+const DueDateItem = styled(TodoMetaItem)<{ isOverdue: boolean }>`
+  ${props => props.isOverdue && `
+    color: var(--error-color);
+    font-weight: bold;
+    
+    svg {
+      color: var(--error-color);
+    }
+  `}
+`;
+
+const OverdueIndicator = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  background-color: var(--error-light);
+  color: var(--error-color);
+  font-weight: 600;
+  font-size: 0.85rem;
+  border-radius: var(--radius-sm);
+  margin-top: 0.8rem;
+  
+  svg {
+    margin-right: 0.4rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.6rem;
+  }
+`;
+
 const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
   const { toggleTodoCompletion, deleteTodo, updateTodo, addSubtask, toggleSubtaskCompletion, deleteSubtask } = useTodo();
+  const { projects } = useProject();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
@@ -448,6 +500,36 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
   const itemRef = useRef<HTMLDivElement>(null);
   const [showSubtasks, setShowSubtasks] = useState(false);
   const [newSubtask, setNewSubtask] = useState('');
+
+  // Encontrar o projeto associado à tarefa
+  const associatedProject = todo.projectId ? projects.find(project => project.id === todo.projectId) : null;
+
+  // Verificar se a tarefa está em atraso
+  const isOverdue = useCallback(() => {
+    if (todo.completed) return false; // Tarefas concluídas não estão em atraso
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(todo.date);
+    dueDate.setHours(0, 0, 0, 0);
+    
+    return dueDate < today;
+  }, [todo.date, todo.completed]);
+
+  // Calcular dias de atraso ou dias restantes
+  const getDaysUntilDue = useCallback(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(todo.date);
+    dueDate.setHours(0, 0, 0, 0);
+    
+    const diffTime = dueDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return `Atrasado por ${Math.abs(diffDays)} dia(s)`;
+    if (diffDays === 0) return 'Vence hoje';
+    return `${diffDays} dia(s) restante(s)`;
+  }, [todo.date]);
 
   // Efeito para animar quando a tarefa é completada
   useEffect(() => {
@@ -581,10 +663,10 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
 
       <TodoMeta>
         {todo.date && (
-          <TodoMetaItem>
+          <DueDateItem isOverdue={isOverdue()}>
             <FaRegCalendarAlt aria-hidden="true" />
             <span>{formatDate(todo.date)}</span>
-          </TodoMetaItem>
+          </DueDateItem>
         )}
         
         <TodoMetaItem>
@@ -606,7 +688,25 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
             </CategoryBadge>
           </TodoMetaItem>
         )}
+        
+        {/* Exibir badge do projeto se a tarefa estiver associada a um projeto */}
+        {associatedProject && (
+          <TodoMetaItem>
+            <ProjectBadge>
+              <FaProjectDiagram size={10} aria-hidden="true" />
+              {associatedProject.name}
+            </ProjectBadge>
+          </TodoMetaItem>
+        )}
       </TodoMeta>
+      
+      {/* Indicador de atraso para tarefas não concluídas */}
+      {isOverdue() && !todo.completed && (
+        <OverdueIndicator>
+          <FaExclamationTriangle aria-hidden="true" />
+          <span>{getDaysUntilDue()}</span>
+        </OverdueIndicator>
+      )}
       
       <CompletionStatus 
         completed={todo.completed}
