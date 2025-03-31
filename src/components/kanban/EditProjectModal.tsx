@@ -21,7 +21,16 @@ const ModalContent = styled.div`
   border-radius: 8px;
   width: 90%;
   max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   box-shadow: var(--shadow-md);
+  
+  @media (max-width: 768px) {
+    width: 95%;
+    max-height: 95vh;
+  }
 `;
 
 const ModalHeader = styled.div`
@@ -51,6 +60,11 @@ const CloseButton = styled.button`
 
 const ModalBody = styled.div`
   padding: 1.5rem;
+  overflow-y: auto;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 `;
 
 const FormGroup = styled.div`
