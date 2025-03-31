@@ -34,6 +34,7 @@ interface ProjectContextProps {
   removeTodoFromProject: (projectId: string, todoId: string) => void;
   moveTodoToColumn: (todoId: string, targetColumnId: string, newOrder?: number) => void;
   reorderTodoInColumn: (todoId: string, newOrder: number) => void;
+  advanceTaskStatus: (todoId: string) => { success: boolean; message?: string };
   
   // Metrics
   getLeadTime: (todoId: string) => number | null; // in milliseconds
@@ -537,6 +538,69 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     return totalTime;
   }, [taskMetrics]);
 
+  // Add the advanceTaskStatus function after the moveTodoToColumn function
+  const advanceTaskStatus = useCallback((todoId: string): { success: boolean; message?: string } => {
+    const todo = todos.find(t => t.id === todoId);
+    if (!todo || !todo.projectId || !todo.columnId) {
+      return { success: false, message: 'Tarefa não está associada a um projeto ou coluna' };
+    }
+    
+    const project = projects.find(p => p.id === todo.projectId);
+    if (!project) {
+      return { success: false, message: 'Projeto não encontrado' };
+    }
+    
+    // Ordenar colunas por ordem
+    const orderedColumns = [...project.columns].sort((a, b) => a.order - b.order);
+    
+    // Encontrar a coluna atual
+    const currentColumnIndex = orderedColumns.findIndex(col => col.id === todo.columnId);
+    if (currentColumnIndex === -1) {
+      return { success: false, message: 'Coluna atual não encontrada' };
+    }
+    
+    // Verificar se é a última coluna
+    if (currentColumnIndex === orderedColumns.length - 1) {
+      return { success: false, message: 'Tarefa já está na última coluna' };
+    }
+    
+    // Identificar a próxima coluna
+    const nextColumn = orderedColumns[currentColumnIndex + 1];
+    
+    // Verificar WIP limit
+    if (nextColumn.wipLimit !== undefined) {
+      const tasksInNextColumn = todos.filter(
+        t => t.projectId === todo.projectId && t.columnId === nextColumn.id
+      ).length;
+      
+      if (tasksInNextColumn >= nextColumn.wipLimit) {
+        return { 
+          success: false, 
+          message: `Limite de tarefas (${nextColumn.wipLimit}) atingido na coluna "${nextColumn.title}"` 
+        };
+      }
+      
+      // Verificar se está próximo do limite (80% ou mais)
+      const limitPercentage = (tasksInNextColumn + 1) / nextColumn.wipLimit * 100;
+      if (limitPercentage >= 80) {
+        const message = tasksInNextColumn + 1 === nextColumn.wipLimit 
+          ? `Atenção: Esta ação atingirá o limite de tarefas (${nextColumn.wipLimit}) na coluna "${nextColumn.title}"`
+          : `Atenção: Chegando ao limite de tarefas (${tasksInNextColumn + 1}/${nextColumn.wipLimit}) na coluna "${nextColumn.title}"`;
+        
+        // Mover a tarefa para a próxima coluna
+        moveTodoToColumn(todoId, nextColumn.id);
+        
+        // Retornar sucesso, mas com uma mensagem de atenção
+        return { success: true, message: message };
+      }
+    }
+    
+    // Mover a tarefa para a próxima coluna
+    moveTodoToColumn(todoId, nextColumn.id);
+    
+    return { success: true };
+  }, [todos, projects, moveTodoToColumn]);
+
   const value = useMemo(() => ({
     projects,
     activeProjectId,
@@ -552,6 +616,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     removeTodoFromProject,
     moveTodoToColumn,
     reorderTodoInColumn,
+    advanceTaskStatus,
     getLeadTime,
     getCycleTime,
     isLoading,
@@ -571,6 +636,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     removeTodoFromProject,
     moveTodoToColumn,
     reorderTodoInColumn,
+    advanceTaskStatus,
     getLeadTime,
     getCycleTime,
     isLoading,
