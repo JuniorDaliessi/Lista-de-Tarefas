@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { TodoProvider } from './contexts/TodoContext';
+import { ProjectProvider } from './contexts/ProjectContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import FiltersPage from './pages/FiltersPage';
 import DashboardPage from './pages/DashboardPage';
 import TaskDetailPage from './pages/TaskDetailPage';
+import KanbanPage from './pages/KanbanPage';
+import NewTaskPage from './pages/NewTaskPage';
 import { GlobalStyles } from './styles/GlobalStyles';
 import Tutorial from './components/Tutorial';
 
@@ -88,19 +91,25 @@ function App() {
       <ThemeProvider>
         <ErrorBoundary>
           <TodoProvider>
-            <GlobalStyles />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Layout />}>
-                  <Route index element={<HomePage />} />
-                  <Route path="filtros" element={<FiltersPage />} />
-                  <Route path="dashboard" element={<DashboardPage />} />
-                  <Route path="tarefa/:id" element={<TaskDetailPage />} />
-                </Route>
-              </Routes>
-            </BrowserRouter>
-            
-            {showTutorial && <Tutorial onClose={handleCloseTutorial} />}
+            <ErrorBoundary>
+              <ProjectProvider>
+                <GlobalStyles />
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<Layout />}>
+                      <Route index element={<HomePage />} />
+                      <Route path="filtros" element={<FiltersPage />} />
+                      <Route path="dashboard" element={<DashboardPage />} />
+                      <Route path="kanban" element={<KanbanPage />} />
+                      <Route path="tarefa/:id" element={<TaskDetailPage />} />
+                      <Route path="nova-tarefa" element={<NewTaskPage />} />
+                    </Route>
+                  </Routes>
+                </BrowserRouter>
+                
+                {showTutorial && <Tutorial onClose={handleCloseTutorial} />}
+              </ProjectProvider>
+            </ErrorBoundary>
           </TodoProvider>
         </ErrorBoundary>
       </ThemeProvider>

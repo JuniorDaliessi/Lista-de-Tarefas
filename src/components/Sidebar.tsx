@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { NavLink } from 'react-router-dom';
-import { FaHome, FaFilter, FaSun, FaMoon, FaSearch, FaTags, FaPlus, FaTimes, FaCheck, FaChartBar, FaTasks } from 'react-icons/fa';
+import { FaHome, FaFilter, FaSun, FaMoon, FaSearch, FaTags, FaPlus, FaTimes, FaCheck, FaChartBar, FaTasks, FaColumns } from 'react-icons/fa';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTodo } from '../contexts/TodoContext';
 
@@ -473,6 +473,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar, isMobile }) => 
               <FaChartBar />
             </Icon>
             <Text>Dashboard</Text>
+          </StyledNavLink>
+        </NavItem>
+        
+        <NavItem>
+          <StyledNavLink to="/kanban" onClick={handleNavClick}>
+            <span><FaColumns /></span>
+            Kanban
           </StyledNavLink>
         </NavItem>
       </NavMenu>

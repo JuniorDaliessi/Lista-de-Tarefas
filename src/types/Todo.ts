@@ -15,4 +15,13 @@ export interface Todo {
   createdAt: string;
   category: string;
   subtasks: SubTask[];
+  
+  // New Kanban related properties
+  projectId?: string; // Which project this todo belongs to (if any)
+  columnId?: string; // Which column this todo is in (if part of a project)
+  order?: number; // Order within the column
+  
+  // Metrics for Kanban analysis
+  startedAt?: string; // When work began (entered in-progress)
+  completedAt?: string; // When marked as done
 } 

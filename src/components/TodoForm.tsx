@@ -8,6 +8,8 @@ import { v4 as uuidv4 } from 'uuid';
 interface TodoFormProps {
   editTodo?: Todo;
   onCancel?: () => void;
+  projectId?: string;
+  columnId?: string;
 }
 
 const FormContainer = styled.form`
@@ -403,7 +405,7 @@ const AddSubtaskForm = styled.div`
   }
 `;
 
-const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
+const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel, projectId, columnId }) => {
   const { addTodo, updateTodo, categories } = useTodo();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -538,6 +540,8 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
         priority,
         category: finalCategory,
         completed: editTodo ? editTodo.completed : false,
+        projectId: projectId || undefined,
+        columnId: columnId || undefined
       };
 
       if (editTodo) {
@@ -575,7 +579,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel }) => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [title, description, date, priority, category, newCategory, subtasks, editTodo, addTodo, updateTodo, resetForm, onCancel]);
+  }, [title, description, date, priority, category, newCategory, subtasks, editTodo, addTodo, updateTodo, resetForm, onCancel, projectId, columnId]);
 
   return (
     <FormContainer onSubmit={handleSubmit} ref={formRef} aria-labelledby="form-title">

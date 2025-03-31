@@ -102,4 +102,35 @@ export const toggleTodoCompletion = (id: string): Todo[] => {
   );
   saveTodos(updatedTodos);
   return updatedTodos;
+};
+
+/**
+ * Obtém um item genérico do localStorage
+ * @param key Chave do item
+ * @returns Item parseado ou null se não existir
+ */
+export const getItem = <T>(key: string): T | null => {
+  try {
+    const item = localStorage.getItem(key);
+    if (!item) {
+      return null;
+    }
+    return JSON.parse(item) as T;
+  } catch (error) {
+    console.error(`Erro ao carregar ${key} do localStorage:`, error);
+    return null;
+  }
+};
+
+/**
+ * Salva um item genérico no localStorage
+ * @param key Chave do item
+ * @param value Valor a ser salvo
+ */
+export const setItem = <T>(key: string, value: T): void => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error(`Erro ao salvar ${key} no localStorage:`, error);
+  }
 }; 
