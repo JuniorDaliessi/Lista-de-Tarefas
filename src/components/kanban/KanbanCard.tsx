@@ -97,9 +97,12 @@ const CardDescription = styled.p`
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   line-height: 1.4;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
   
   /* Responsividade para telas menores */
   @media (max-width: 480px) {
