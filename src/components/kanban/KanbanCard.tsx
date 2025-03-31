@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import styled from 'styled-components';
 import { Todo } from '../../types/Todo';
 import { FaCalendarAlt, FaTrash, FaCheck, FaClock, FaTag, FaProjectDiagram } from 'react-icons/fa';
 import { useProject } from '../../contexts/ProjectContext';
-import { Draggable } from 'react-beautiful-dnd';
 
 interface CardContainerProps {
   $completed?: boolean;
@@ -264,13 +263,14 @@ interface KanbanCardProps {
 
 const KanbanCard: React.FC<KanbanCardProps> = ({ todo, index, onClick, onRemove }) => {
   const { projects } = useProject();
+  const [isDragging, setIsDragging] = useState(false);
   
-  // Encontrar o projeto associado à tarefa (mesmo que estejamos dentro de um projeto, 
-  // isso mostra claramente a qual projeto a tarefa pertence)
+  // Encontrar o projeto associado à tarefa
   const associatedProject = todo.projectId ? projects.find(project => project.id === todo.projectId) : null;
 
   const handleRemoveClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering card click
+    e.stopPropagation();
+    e.preventDefault();
     onRemove();
   };
   
@@ -278,6 +278,15 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ todo, index, onClick, onRemove 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+  };
+  
+  // Função que verifica se a data está no passado
+  const isPastDue = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(todo.date);
+    dueDate.setHours(0, 0, 0, 0);
+    return dueDate < today;
   };
   
   // Calculate days until due date
@@ -290,91 +299,107 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ todo, index, onClick, onRemove 
     const diffTime = dueDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    if (diffDays < 0) return `Atrasado por ${Math.abs(diffDays)} dia(s)`;
-    if (diffDays === 0) return 'Vence hoje';
-    return `${diffDays} dia(s) restante(s)`;
+    if (diffDays < 0) return Math.abs(diffDays);
+    return diffDays;
   };
   
-  const isPastDue = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const dueDate = new Date(todo.date);
-    dueDate.setHours(0, 0, 0, 0);
-    return dueDate < today;
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    // Armazenar os dados no formato de texto
+    e.dataTransfer.setData('text/plain', JSON.stringify({
+      todoId: todo.id,
+      sourceColumnId: todo.columnId,
+      sourceIndex: index
+    }));
+    // Definir efeito de mover
+    e.dataTransfer.effectAllowed = 'move';
+    
+    // Adicionar alguma imagem de visualização
+    const img = new Image();
+    img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+    e.dataTransfer.setDragImage(img, 0, 0);
+    
+    setIsDragging(true);
+    
+    // Log para debug
+    console.log(`Iniciando arrasto da tarefa ${todo.id}`);
+  };
+  
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    console.log(`Arrasto da tarefa ${todo.id} finalizado`);
   };
   
   return (
-    <Draggable draggableId={todo.id} index={index}>
-      {(provided, snapshot) => (
-        <CardContainer
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-          $completed={todo.completed}
-          $isDragging={snapshot.isDragging}
-          onClick={onClick}
-        >
-          <CardContent>
-            <CardTitle $completed={todo.completed}>
-              {todo.completed && <CompletedIcon />}
-              {todo.title}
-            </CardTitle>
-            
-            {todo.description && <CardDescription>{todo.description}</CardDescription>}
-            
-            <CardMeta>
-              {todo.date && (
-                <MetaItem>
-                  <FaCalendarAlt />
-                  <span>{formatDate(todo.date)}</span>
-                </MetaItem>
-              )}
-              {todo.category && (
-                <MetaItem>
-                  <FaTag />
-                  <span>{todo.category}</span>
-                </MetaItem>
-              )}
-              {!todo.completed && (
-                <MetaItem style={{ 
-                  color: isPastDue() ? 'var(--error-color)' : 'inherit',
-                  fontWeight: isPastDue() ? 'bold' : 'normal'
-                }}>
-                  <FaClock />
-                  <span>{getDaysUntilDue(todo.date)}</span>
-                </MetaItem>
-              )}
-            </CardMeta>
-            
-            {/* Indicador de projeto */}
-            {associatedProject && (
-              <ProjectIndicator>
-                <FaProjectDiagram />
-                <span>{associatedProject.name}</span>
-              </ProjectIndicator>
-            )}
-            
-            <CardFooter>
-              <CardPriority priority={todo.priority}>
-                {todo.priority}
-              </CardPriority>
-              
-              <CardActions>
-                <DeleteButton 
-                  onClick={handleRemoveClick} 
-                  title="Remover da coluna"
-                  aria-label="Remover tarefa da coluna"
-                >
-                  <FaTrash size={14} />
-                </DeleteButton>
-              </CardActions>
-            </CardFooter>
-          </CardContent>
-        </CardContainer>
-      )}
-    </Draggable>
+    <CardContainer
+      $completed={todo.completed}
+      $isDragging={isDragging}
+      onClick={onClick}
+      draggable={true}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      data-todo-id={todo.id}
+      data-column-id={todo.columnId}
+      data-index={index}
+    >
+      <CardContent>
+        <CardTitle $completed={todo.completed}>
+          {todo.completed && <CompletedIcon />}
+          {todo.title}
+        </CardTitle>
+        
+        {todo.description && <CardDescription>{todo.description}</CardDescription>}
+        
+        <CardMeta>
+          {todo.date && (
+            <MetaItem>
+              <FaCalendarAlt />
+              <span>{formatDate(todo.date)}</span>
+            </MetaItem>
+          )}
+          {todo.category && (
+            <MetaItem>
+              <FaTag />
+              <span>{todo.category}</span>
+            </MetaItem>
+          )}
+          {!todo.completed && isPastDue() && (
+            <MetaItem style={{ 
+              color: 'var(--error-color)',
+              fontWeight: 'bold'
+            }}>
+              <FaClock />
+              <span>{getDaysUntilDue(todo.date)} dias atrasado</span>
+            </MetaItem>
+          )}
+        </CardMeta>
+        
+        {/* Indicador de projeto */}
+        {associatedProject && (
+          <ProjectIndicator>
+            <FaProjectDiagram />
+            <span>{associatedProject.name}</span>
+          </ProjectIndicator>
+        )}
+        
+        <CardFooter>
+          <CardPriority priority={todo.priority}>
+            {todo.priority}
+          </CardPriority>
+          
+          <CardActions>
+            <DeleteButton 
+              onClick={handleRemoveClick} 
+              title="Remover da coluna"
+              aria-label="Remover tarefa da coluna"
+            >
+              <FaTrash size={14} />
+            </DeleteButton>
+          </CardActions>
+        </CardFooter>
+      </CardContent>
+    </CardContainer>
   );
 };
 
-export default KanbanCard;
-export {}; 
+export default KanbanCard; 

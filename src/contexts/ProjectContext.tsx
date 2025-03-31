@@ -307,6 +307,8 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     const todo = todos.find(t => t.id === todoId);
     if (!todo || !todo.projectId) return;
     
+    const sourceColumnId = todo.columnId;
+    
     // Find max order in the target column if newOrder not provided
     if (newOrder === undefined) {
       const columnTodos = todos.filter(
@@ -325,7 +327,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     if (targetColumnId === 'in-progress' && !todo.startedAt) {
       additionalUpdates = { startedAt: now };
     } else if (targetColumnId === 'done' && !todo.completedAt) {
-      additionalUpdates = { completedAt: now };
+      additionalUpdates = { completedAt: now, completed: true };
     }
     
     // Update the todo
@@ -336,6 +338,48 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
       ...additionalUpdates
     });
     
+    // Reorganize tasks in the source column
+    if (sourceColumnId) {
+      const sourceTodos = todos.filter(
+        t => t.id !== todoId && t.projectId === todo.projectId && t.columnId === sourceColumnId
+      );
+      
+      // Reorder todos in the source column to fill the gap
+      const sourceTodosToUpdate: Todo[] = [];
+      sourceTodos.forEach(t => {
+        const currentOrder = t.order || 0;
+        if (currentOrder > (todo.order || 0)) {
+          sourceTodosToUpdate.push({
+            ...t,
+            order: currentOrder - 1
+          });
+        }
+      });
+      
+      // Update source column todos
+      sourceTodosToUpdate.forEach(t => updateTodo(t));
+    }
+    
+    // Reorganize tasks in the target column
+    const targetTodos = todos.filter(
+      t => t.id !== todoId && t.projectId === todo.projectId && t.columnId === targetColumnId
+    );
+    
+    // Shift todos in the target column to make space
+    const targetTodosToUpdate: Todo[] = [];
+    targetTodos.forEach(t => {
+      const currentOrder = t.order || 0;
+      if (currentOrder >= newOrder) {
+        targetTodosToUpdate.push({
+          ...t,
+          order: currentOrder + 1
+        });
+      }
+    });
+    
+    // Update target column todos
+    targetTodosToUpdate.forEach(t => updateTodo(t));
+    
     // Update metrics
     updateTaskColumnMetrics(todoId, targetColumnId);
   }, [todos, updateTodo]);
@@ -344,10 +388,50 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     const todo = todos.find(t => t.id === todoId);
     if (!todo || !todo.projectId || !todo.columnId) return;
     
-    // Update the todo's order
+    // Get all todos in the same column
+    const columnTodos = todos.filter(
+      t => t.projectId === todo.projectId && t.columnId === todo.columnId
+    );
+    
+    // Remove the current todo from the array for reordering
+    const otherTodos = columnTodos.filter(t => t.id !== todoId);
+    
+    // Set the new order for the current todo
     updateTodo({
       ...todo,
       order: newOrder
+    });
+    
+    // Reorder other todos to maintain consistent ordering
+    const todosToUpdate: Todo[] = [];
+    
+    otherTodos.forEach(t => {
+      let newPosition = t.order || 0;
+      
+      if (todo.order !== undefined && newOrder > todo.order) {
+        // Moving down - shift todos between old and new position up by 1
+        if (newPosition > todo.order && newPosition <= newOrder) {
+          newPosition--;
+        }
+      } else if (todo.order !== undefined && newOrder < todo.order) {
+        // Moving up - shift todos between new and old position down by 1
+        if (newPosition >= newOrder && newPosition < todo.order) {
+          newPosition++;
+        }
+      }
+      
+      // Only update if the order changed
+      if (newPosition !== t.order) {
+        todosToUpdate.push({
+          ...t,
+          order: newPosition
+        });
+      }
+    });
+    
+    // Update all modified todos
+    todosToUpdate.forEach(updatedTodo => {
+      updateTodo(updatedTodo);
     });
   }, [todos, updateTodo]);
 

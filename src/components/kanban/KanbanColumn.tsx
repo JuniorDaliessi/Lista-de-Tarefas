@@ -1,7 +1,6 @@
 import React, { ReactNode } from 'react';
 import styled from 'styled-components';
 import { FaPlus, FaInfoCircle } from 'react-icons/fa';
-import { Droppable } from 'react-beautiful-dnd';
 
 const ColumnContainer = styled.div`
   background-color: var(--background-primary);
@@ -84,14 +83,13 @@ const TaskCount = styled.span<{ isWipLimitReached?: boolean }>`
   }
 `;
 
-const CardsContainer = styled.div<{ isDraggingOver: boolean }>`
+const CardsContainer = styled.div<{ isDraggingOver?: boolean }>`
   padding: 1rem;
   flex-grow: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
-  background-color: ${props => props.isDraggingOver ? 'var(--hover-background)' : 'transparent'};
   min-height: 100px;
   transition: background-color 0.2s ease;
   
@@ -176,6 +174,8 @@ interface KanbanColumnProps {
   tasksCount: number;
   children: ReactNode;
   onAddCard: () => void;
+  onDragOver?: (e: React.DragEvent<HTMLDivElement>) => void;
+  onDrop?: (e: React.DragEvent<HTMLDivElement>) => void;
 }
 
 const KanbanColumn: React.FC<KanbanColumnProps> = ({ 
@@ -184,9 +184,27 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   wipLimit, 
   tasksCount,
   children, 
-  onAddCard 
+  onAddCard,
+  onDragOver,
+  onDrop
 }) => {
   const isWipLimitReached = wipLimit !== undefined && tasksCount >= wipLimit;
+  
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onDragOver) {
+      onDragOver(e);
+    }
+  };
+  
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onDrop) {
+      onDrop(e);
+    }
+  };
   
   return (
     <ColumnContainer>
@@ -197,18 +215,13 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         </TaskCount>
       </ColumnHeader>
       
-      <Droppable droppableId={id}>
-        {(provided, snapshot) => (
-          <CardsContainer
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            isDraggingOver={snapshot.isDraggingOver}
-          >
-            {children}
-            {provided.placeholder}
-          </CardsContainer>
-        )}
-      </Droppable>
+      <CardsContainer
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        data-column-id={id}
+      >
+        {children}
+      </CardsContainer>
       
       <AddCardButton onClick={onAddCard}>
         <FaPlus /> Adicionar tarefa
@@ -217,5 +230,4 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   );
 };
 
-export default KanbanColumn;
-export {}; 
+export default KanbanColumn; 

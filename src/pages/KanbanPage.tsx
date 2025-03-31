@@ -529,6 +529,7 @@ const KanbanPage: React.FC = () => {
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [dragOverColumnId, setDragOverColumnId] = useState<string | null>(null);
   
   // Get current project
   const currentProject = projects.find(p => p.id === activeProjectId) || null;
@@ -662,49 +663,61 @@ const KanbanPage: React.FC = () => {
     if (showFilters && !showMetrics) setShowFilters(false);
   }, [showFilters, showMetrics]);
   
-  // Dentro do componente KanbanPage, adicione o handler para onDragEnd
-  const handleDragEnd = useCallback((result: DropResult) => {
-    const { destination, source, draggableId } = result;
+  // No componente KanbanPage, adicionar essas funções para usar o drag and drop nativo
+  const handleColumnDragOver = useCallback((e: React.DragEvent<HTMLDivElement>, columnId: string) => {
+    e.preventDefault();
+    setDragOverColumnId(columnId);
+  }, []);
+
+  const handleColumnDrop = useCallback((e: React.DragEvent<HTMLDivElement>, columnId: string) => {
+    e.preventDefault();
     
-    // Se não houver destino válido (arrastado para fora de uma coluna) ou se a posição não mudar
-    if (!destination || 
-        (destination.droppableId === source.droppableId && 
-         destination.index === source.index)) {
-      return;
-    }
-    
-    // Verifica se o projeto está selecionado
-    if (!currentProject || !activeProjectId) {
-      return;
-    }
-    
-    const sourceColumnId = source.droppableId;
-    const destinationColumnId = destination.droppableId;
-    const todoId = draggableId;
-    
-    // Verificar limites WIP se estiver movendo para uma coluna diferente
-    if (sourceColumnId !== destinationColumnId) {
-      const targetColumn = currentProject.columns.find(col => col.id === destinationColumnId);
-      if (targetColumn && targetColumn.wipLimit !== undefined) {
-        const currentTasksInColumn = todosByColumn[destinationColumnId]?.length || 0;
-        
-        // Se o limite WIP seria excedido
-        if (currentTasksInColumn >= targetColumn.wipLimit) {
-          alert(`Limite WIP de ${targetColumn.wipLimit} atingido para a coluna "${targetColumn.title}".`);
-          return;
-        }
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      console.log('Dados recebidos no drop:', data);
+      
+      if (!data || !data.todoId || !data.sourceColumnId) {
+        console.error('Dados inválidos recebidos no evento de drop');
+        return;
       }
+      
+      const { todoId, sourceColumnId, sourceIndex } = data;
+      
+      // Se o destino for diferente da origem, mover a tarefa para a nova coluna
+      if (sourceColumnId !== columnId) {
+        console.log(`Movendo tarefa ${todoId} da coluna ${sourceColumnId} para a coluna ${columnId}`);
+        
+        // Verificar limites WIP
+        if (currentProject) {
+          const targetColumn = currentProject.columns.find(col => col.id === columnId);
+          if (targetColumn && targetColumn.wipLimit !== undefined) {
+            const currentTasksInColumn = todosByColumn[columnId]?.length || 0;
+            
+            if (currentTasksInColumn >= targetColumn.wipLimit) {
+              alert(`Limite WIP de ${targetColumn.wipLimit} atingido para a coluna "${targetColumn.title}".`);
+              return;
+            }
+          }
+        }
+        
+        // Calcular a nova ordem
+        const tasksInTargetColumn = todosByColumn[columnId] || [];
+        const newOrder = tasksInTargetColumn.length;
+        
+        // Mover a tarefa
+        moveTodoToColumn(todoId, columnId, newOrder);
+      } else {
+        // Se for na mesma coluna, pode reordenar se necessário
+        // Implementar reordenação se precisar
+        console.log(`Tarefa ${todoId} mantida na mesma coluna ${columnId}`);
+      }
+      
+    } catch (error) {
+      console.error('Erro ao processar o evento de drop:', error);
+    } finally {
+      setDragOverColumnId(null);
     }
-    
-    // Mover a tarefa
-    if (sourceColumnId === destinationColumnId) {
-      // Reordenar na mesma coluna
-      reorderTodoInColumn(todoId, destination.index);
-    } else {
-      // Mover para outra coluna
-      moveTodoToColumn(todoId, destinationColumnId, destination.index);
-    }
-  }, [currentProject, activeProjectId, todosByColumn, reorderTodoInColumn, moveTodoToColumn]);
+  }, [currentProject, todosByColumn, moveTodoToColumn]);
   
   // Render project creation message when no projects exist
   if (projects.length === 0) {
@@ -842,8 +855,8 @@ const KanbanPage: React.FC = () => {
           </PanelContainer>
           
           <KanbanContainer>
-            <KanbanBoard onDragEnd={handleDragEnd}>
-              {currentProject.columns
+            <KanbanBoard>
+              {currentProject?.columns
                 .sort((a, b) => a.order - b.order)
                 .map(column => {
                   const columnTasks = todosByColumn[column.id] || [];
@@ -856,6 +869,8 @@ const KanbanPage: React.FC = () => {
                       wipLimit={column.wipLimit}
                       tasksCount={columnTasks.length}
                       onAddCard={() => handleCreateNewTask(column.id)}
+                      onDragOver={(e) => handleColumnDragOver(e, column.id)}
+                      onDrop={(e) => handleColumnDrop(e, column.id)}
                     >
                       {columnTasks.map((todo, index) => (
                         <KanbanCard
