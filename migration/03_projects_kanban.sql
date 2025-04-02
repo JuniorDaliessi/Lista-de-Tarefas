@@ -37,7 +37,7 @@ CREATE TABLE task_metrics (
     left_at TIMESTAMP WITH TIME ZONE,
     
     -- Cada tarefa pode ter apenas uma entrada ativa (sem left_at) por coluna
-    CONSTRAINT unique_active_column_entry UNIQUE (task_id, column_id, left_at) NULLS NOT DISTINCT
+    CONSTRAINT unique_active_column_entry UNIQUE (task_id, column_id)
 );
 
 -- Criar índices para melhorar performance de consultas

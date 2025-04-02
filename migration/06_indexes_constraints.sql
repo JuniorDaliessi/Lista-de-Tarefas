@@ -1,10 +1,12 @@
 -- 06_indexes_constraints.sql
 -- Índices adicionais, restrições e otimizações
 
+-- Extensão necessária para índices de trigramas
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 -- Índices para pesquisa e filtragem de tarefas
 CREATE INDEX idx_tasks_title_trigram ON tasks USING gin (title gin_trgm_ops);
 CREATE INDEX idx_tasks_description_trigram ON tasks USING gin (description gin_trgm_ops);
-CREATE EXTENSION IF NOT EXISTS pg_trgm; -- Extensão necessária para índices de trigramas
 
 -- Índices compostos para consultas comuns
 CREATE INDEX idx_tasks_user_completed ON tasks(user_id, completed);
@@ -23,7 +25,7 @@ CREATE INDEX idx_subtasks_task_completed ON subtasks(task_id, completed);
 
 -- Restrições adicionais
 ALTER TABLE tasks ADD CONSTRAINT chk_due_date_valid 
-  CHECK (due_date IS NULL OR due_date > '2000-01-01');
+  CHECK (due_date IS NULL OR due_date > '2000-01-01'::timestamp with time zone);
 
 ALTER TABLE tasks ADD CONSTRAINT chk_order_positive
   CHECK (column_order IS NULL OR column_order >= 0);

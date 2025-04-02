@@ -1,130 +1,125 @@
-# Todo App Kanban
+# Todo App com Quadros Kanban
 
-Um aplicativo para gerenciamento de tarefas e projetos com visualização Kanban.
+Uma aplicação de gerenciamento de tarefas e projetos com funcionalidade de quadros Kanban para organização visual do fluxo de trabalho.
 
 ## Funcionalidades
 
-- Gerenciamento de tarefas com prioridade, categorias e datas
-- Visualização Kanban de projetos
-- Interface responsiva
-- Tema claro/escuro
-- Armazenamento local dos dados
+- **Gerenciamento de Tarefas**: Criar, atualizar, completar e excluir tarefas
+- **Subtarefas**: Dividir tarefas em passos menores
+- **Categorização**: Organizar tarefas por categorias personalizáveis
+- **Projetos**: Agrupar tarefas em projetos
+- **Quadros Kanban**: Visualizar e gerenciar tarefas em colunas de progresso
+- **Priorização**: Definir prioridades para suas tarefas
+- **Datas de Vencimento**: Acompanhar prazos
+- **Estatísticas**: Visualizar métricas de progresso e produtividade
+- **API RESTful**: Backend completo para integração com aplicações frontend
 
-## Deploy na Vercel
+## Tecnologias Utilizadas
 
-### Método 1: Deploy com GitHub
+- **Backend**: Node.js, Express, TypeScript
+- **Banco de Dados**: PostgreSQL
+- **Autenticação**: JWT (JSON Web Tokens)
+- **Segurança**: Bcrypt para hash de senhas, Helmet para proteção HTTP
+- **Outros**: Validação com Zod, Logging com Morgan
 
-1. Faça fork deste repositório para sua conta GitHub
-2. Acesse [vercel.com](https://vercel.com) e faça login
-3. Clique em "New Project"
-4. Importe o repositório do GitHub
-5. Mantenha as configurações padrão (Framework Preset: Create React App)
-6. Clique em "Deploy"
-
-### Método 2: Deploy com CLI Vercel
-
-1. Instale a CLI da Vercel:
-```bash
-npm install -g vercel
-```
-
-2. Faça login na sua conta Vercel:
-```bash
-vercel login
-```
-
-3. Na pasta do projeto, execute:
-```bash
-vercel
-```
-
-4. Siga as instruções para completar o deploy
-
-### Método 3: Deploy manual
-
-1. Construa o projeto:
-```bash
-npm run build
-```
-
-2. Instale a CLI da Vercel:
-```bash
-npm install -g vercel
-```
-
-3. Faça login:
-```bash
-vercel login
-```
-
-4. Faça o deploy da pasta build:
-```bash
-vercel ./build
-```
-
-## Desenvolvimento Local
+## Configuração para Desenvolvimento
 
 ### Pré-requisitos
 
-- Node.js (versão 14 ou superior)
+- Node.js (v14+)
+- PostgreSQL (v13+)
 - npm ou yarn
 
 ### Instalação
 
 1. Clone o repositório:
-```bash
-git clone https://github.com/seu-usuario/todo-app.git
-cd todo-app
-```
+   ```bash
+   git clone https://github.com/seu-usuario/todo-app.git
+   cd todo-app
+   ```
 
 2. Instale as dependências:
-```bash
-npm install
-# ou
-yarn install
+   ```bash
+   npm install
+   ```
+
+3. Configure as variáveis de ambiente:
+   ```bash
+   cp .env.example .env
+   ```
+   Edite o arquivo `.env` com suas configurações.
+
+4. Configure o banco de dados:
+   ```bash
+   npm run db:migrate
+   npm run db:seed # opcional, para dados de exemplo
+   ```
+
+5. Inicie o servidor de desenvolvimento:
+   ```bash
+   npm run dev
+   ```
+
+O servidor estará disponível em `http://localhost:3000`.
+
+## Estrutura do Projeto
+
+```
+src/
+├── config/          # Configurações (banco de dados, etc.)
+├── controllers/     # Controladores da API
+├── middleware/      # Middleware (autenticação, etc.)
+├── routes/          # Rotas da API
+├── services/        # Lógica de negócios
+├── utils/           # Utilitários
+├── app.ts           # Configuração do Express
+└── server.ts        # Ponto de entrada da aplicação
 ```
 
-3. Inicie o servidor de desenvolvimento:
-```bash
-npm start
-# ou
-yarn start
-```
+## API Endpoints
 
-4. Acesse http://localhost:3000 no navegador
+### Autenticação
+- `POST /api/auth/register` - Registrar novo usuário
+- `POST /api/auth/login` - Login de usuário
+
+### Tarefas
+- `GET /api/tasks` - Listar todas as tarefas
+- `GET /api/tasks/:id` - Obter tarefa específica
+- `POST /api/tasks` - Criar nova tarefa
+- `PUT /api/tasks/:id` - Atualizar tarefa
+- `DELETE /api/tasks/:id` - Excluir tarefa
+- `PATCH /api/tasks/:id/toggle` - Alternar status de conclusão
+
+### Subtarefas
+- `GET /api/tasks/:taskId/subtasks` - Listar subtarefas
+- `POST /api/tasks/:taskId/subtasks` - Criar subtarefa
+
+### Projetos
+- `GET /api/projects` - Listar projetos
+- `GET /api/projects/:id/board` - Obter quadro Kanban
+
+### Categorias
+- `GET /api/categories` - Listar categorias
+- `POST /api/categories` - Criar categoria
+
+### Estatísticas
+- `GET /api/stats/dashboard` - Obter dados para dashboard
+- `GET /api/stats/daily-progress` - Obter progresso diário
 
 ## Scripts Disponíveis
 
-- `npm start` - Inicia o servidor de desenvolvimento
-- `npm run build` - Gera a versão de produção
-- `npm test` - Executa os testes
-- `npm run eject` - Ejeta a configuração do Create React App
+- `npm start` - Iniciar servidor em produção
+- `npm run dev` - Iniciar servidor em desenvolvimento com hot-reload
+- `npm run build` - Compilar TypeScript para JavaScript
+- `npm run lint` - Executar linter
+- `npm test` - Executar testes
+- `npm run db:migrate` - Executar migrações do banco de dados
+- `npm run db:seed` - Povoar banco de dados com dados iniciais
 
-## Tecnologias
+## Contribuindo
 
-- React
-- TypeScript
-- React Router
-- Styled Components
-- localStorage para persistência de dados
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou enviar pull requests.
 
 ## Licença
 
-MIT
-
-## Publicação no GitHub
-
-1. Adicione o repositório remoto:
-```
-git remote add origin https://github.com/JuniorDaliessi/todo-app.git
-```
-
-2. Renomeie a branch atual para 'main':
-```
-git branch -M main
-```
-
-3. Envie as alterações para o repositório remoto:
-```
-git push -u origin main
-```
+Este projeto está licenciado sob a [Licença MIT](LICENSE).
