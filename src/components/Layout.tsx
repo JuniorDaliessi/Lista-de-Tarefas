@@ -19,10 +19,11 @@ const MainContent = styled.div<{ isSidebarOpen: boolean }>`
   background-color: var(--background-primary);
   transition: margin-left var(--transition-normal);
   min-height: 100vh;
+  position: relative;
   
   @media (max-width: 768px) {
     margin-left: 0;
-    padding: 1rem;
+    padding: 1.5rem 1rem;
     width: 100%;
   }
 `;
@@ -60,8 +61,8 @@ const HeaderControls = styled.div`
   gap: 0.8rem;
 `;
 
-const ThemeToggle = styled.button`
-  background: none;
+const IconButton = styled.button`
+  background: transparent;
   border: none;
   color: var(--text-secondary);
   font-size: 1.2rem;
@@ -71,26 +72,28 @@ const ThemeToggle = styled.button`
   justify-content: center;
   padding: 0.5rem;
   border-radius: 50%;
-  transition: color var(--transition-fast);
+  transition: all var(--transition-fast);
   
   &:hover {
     color: var(--accent-color);
+    background-color: var(--hover-background);
+    transform: translateY(-2px);
+  }
+  
+  &:active {
+    transform: translateY(0);
   }
 `;
 
-const MenuButton = styled.button`
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  font-size: 1.5rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-  
+const ThemeToggle = styled(IconButton)`
   &:hover {
-    color: var(--accent-color);
+    transform: rotate(15deg);
+  }
+`;
+
+const MenuToggle = styled(IconButton)`
+  &:hover {
+    transform: scale(1.1);
   }
 `;
 
@@ -101,12 +104,11 @@ const Overlay = styled.div<{ isVisible: boolean }>`
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(2px);
   z-index: 150;
+  backdrop-filter: blur(2px);
   opacity: ${props => props.isVisible ? 1 : 0};
   visibility: ${props => props.isVisible ? 'visible' : 'hidden'};
   transition: opacity var(--transition-normal), visibility var(--transition-normal);
-  cursor: pointer;
   
   @media (min-width: 769px) {
     display: none;
@@ -114,66 +116,63 @@ const Overlay = styled.div<{ isVisible: boolean }>`
 `;
 
 const Layout: React.FC = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { theme, toggleTheme } = useTheme();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  
-  useEffect(() => {
-    if (isMobile && isSidebarOpen) {
-      document.body.classList.add('sidebar-open');
-    } else {
-      document.body.classList.remove('sidebar-open');
-    }
-    
-    return () => {
-      document.body.classList.remove('sidebar-open');
-    };
-  }, [isMobile, isSidebarOpen]);
-  
+
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth <= 768;
+      const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      if (!mobile && !isSidebarOpen) {
-        setIsSidebarOpen(true);
+      
+      // Auto-open sidebar on desktop, close on mobile
+      if (!mobile && !sidebarOpen) {
+        setSidebarOpen(true);
+      } else if (mobile && sidebarOpen) {
+        setSidebarOpen(false);
       }
     };
-    
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [isSidebarOpen]);
+  }, [sidebarOpen]);
   
   const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+    setSidebarOpen(!sidebarOpen);
+    
+    // Toggle body class to prevent scrolling on mobile when sidebar is open
+    if (isMobile) {
+      document.body.classList.toggle('sidebar-open', !sidebarOpen);
+    }
   };
   
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+    document.body.classList.remove('sidebar-open');
+  };
+
   return (
     <LayoutContainer>
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        closeSidebar={() => setIsSidebarOpen(false)} 
-        isMobile={isMobile} 
-      />
+      <Sidebar isOpen={sidebarOpen} closeSidebar={closeSidebar} isMobile={isMobile} />
       
-      <Overlay 
-        isVisible={isMobile && isSidebarOpen} 
-        onClick={() => setIsSidebarOpen(false)} 
-      />
+      <Overlay isVisible={isMobile && sidebarOpen} onClick={closeSidebar} />
       
-      <MainContent isSidebarOpen={!isMobile && isSidebarOpen}>
-        <MobileHeader>
-          <AppTitle>Todo App</AppTitle>
-          
-          <HeaderControls>
-            <ThemeToggle onClick={toggleTheme} aria-label="Alternar tema">
-              {theme === 'light' ? <FaMoon /> : <FaSun />}
-            </ThemeToggle>
+      <MainContent isSidebarOpen={sidebarOpen && !isMobile}>
+        {isMobile && (
+          <MobileHeader>
+            <MenuToggle onClick={toggleSidebar} aria-label="Menu">
+              {sidebarOpen ? <FaTimes /> : <FaBars />}
+            </MenuToggle>
             
-            <MenuButton onClick={toggleSidebar}>
-              {isSidebarOpen ? <FaTimes /> : <FaBars />}
-            </MenuButton>
-          </HeaderControls>
-        </MobileHeader>
+            <AppTitle>Todo App</AppTitle>
+            
+            <HeaderControls>
+              <ThemeToggle onClick={toggleTheme} aria-label="Alternar tema">
+                {theme === 'light' ? <FaMoon /> : <FaSun />}
+              </ThemeToggle>
+            </HeaderControls>
+          </MobileHeader>
+        )}
         
         <Outlet />
       </MainContent>

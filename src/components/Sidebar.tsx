@@ -47,12 +47,13 @@ const SidebarContainer = styled.div<{ isOpen: boolean, isMobile: boolean }>`
     padding-top: 1rem;
     transform: ${props => props.isOpen ? 'translateX(0)' : 'translateX(-100%)'};
     left: 0;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
   }
 `;
 
 const SidebarHeader = styled.div`
   position: relative;
-  padding: 0 1rem 0 1.5rem;
+  padding: 0 1.5rem 0 1.5rem;
   margin-bottom: 1.5rem;
 `;
 
@@ -67,12 +68,14 @@ const CloseButton = styled.button`
   cursor: pointer;
   padding: 0.5rem;
   display: none;
-  transition: color var(--transition-fast);
+  transition: all var(--transition-fast);
   z-index: 10;
+  border-radius: 50%;
   
   &:hover {
     color: var(--text-primary);
-    background: none;
+    background-color: var(--hover-background);
+    transform: rotate(90deg);
   }
   
   @media (max-width: 768px) {
@@ -110,11 +113,12 @@ const ThemeToggle = styled.button`
   justify-content: center;
   padding: 0.5rem;
   border-radius: 50%;
-  transition: color var(--transition-fast), background-color var(--transition-fast);
+  transition: all var(--transition-fast);
   
   &:hover {
     color: var(--text-primary);
     background-color: var(--hover-background);
+    transform: rotate(15deg);
   }
   
   @media (max-width: 768px) {
@@ -123,10 +127,10 @@ const ThemeToggle = styled.button`
 `;
 
 const SearchContainer = styled.div`
-  padding: 1rem 1.2rem;
+  padding: 0 1.5rem 1.2rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 `;
 
 const SearchInput = styled.div`
@@ -140,13 +144,14 @@ const SearchInput = styled.div`
     border: 1px solid var(--border-color);
     background-color: var(--background-primary);
     color: var(--text-primary);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     transition: all var(--transition-fast);
     
     &:focus {
       outline: none;
       border-color: var(--accent-color);
-      box-shadow: 0 0 0 2px rgba(79, 134, 247, 0.2);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      transform: translateY(-1px);
     }
     
     &::placeholder {
@@ -155,37 +160,178 @@ const SearchInput = styled.div`
   }
 `;
 
-const SearchTypeSelect = styled.div`
-  width: 100%;
-  
-  select {
-    width: 100%;
-    padding: 0.5rem;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-    background-color: var(--background-primary);
-    color: var(--text-primary);
-    font-size: 0.85rem;
-    transition: all var(--transition-fast);
-    
-    &:focus {
-      outline: none;
-      border-color: var(--accent-color);
-    }
-  }
-`;
-
-const SearchIcon = styled.span`
+const SearchIcon = styled.div`
   position: absolute;
   left: 0.8rem;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-secondary);
+  font-size: 0.9rem;
   pointer-events: none;
   transition: color var(--transition-fast);
   
   input:focus + & {
     color: var(--accent-color);
+  }
+`;
+
+const SearchTypeSelect = styled.div`
+  position: relative;
+  
+  select {
+    width: 100%;
+    appearance: none;
+    padding: 0.8rem 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background-color: var(--background-primary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    
+    &:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      transform: translateY(-1px);
+    }
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--text-secondary);
+    border-bottom: 2px solid var(--text-secondary);
+    pointer-events: none;
+    transition: all var(--transition-fast);
+  }
+  
+  &:hover::after {
+    border-color: var(--accent-color);
+  }
+`;
+
+const NavSection = styled.div`
+  margin-bottom: 1.5rem;
+  padding: 0 1.5rem;
+`;
+
+const NavTitle = styled.h3`
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0 0 0.75rem 0;
+  padding-left: 0.5rem;
+  letter-spacing: 0.5px;
+`;
+
+const NavList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0;
+`;
+
+const NavItem = styled.li<{ active?: boolean }>`
+  margin-bottom: 0.25rem;
+  
+  a {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: ${props => props.active ? 'var(--accent-color)' : 'var(--text-primary)'};
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    font-weight: ${props => props.active ? '600' : '400'};
+    background-color: ${props => props.active ? 'var(--active-background)' : 'transparent'};
+    position: relative;
+    overflow: hidden;
+    
+    svg {
+      margin-right: 0.75rem;
+      font-size: 1.1rem;
+      color: ${props => props.active ? 'var(--accent-color)' : 'var(--text-secondary)'};
+      transition: all var(--transition-fast);
+    }
+    
+    &:hover {
+      background-color: var(--hover-background);
+      color: var(--accent-color);
+      transform: translateX(3px);
+      
+      svg {
+        color: var(--accent-color);
+      }
+    }
+    
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 3px;
+      background-color: var(--accent-color);
+      transform: ${props => props.active ? 'scaleY(1)' : 'scaleY(0)'};
+      transition: transform var(--transition-fast);
+    }
+    
+    &:hover::before {
+      transform: scaleY(1);
+    }
+  }
+`;
+
+const CategoryList = styled.div`
+  padding: 0 1.5rem;
+  margin-bottom: 1.5rem;
+`;
+
+const CategoryItem = styled.div<{ color: string, active?: boolean }>`
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.25rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background-color: ${props => props.active ? 'var(--active-background)' : 'transparent'};
+  font-weight: ${props => props.active ? '600' : '400'};
+  
+  &:hover {
+    background-color: var(--hover-background);
+    transform: translateX(3px);
+  }
+  
+  .category-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: ${props => props.color};
+    margin-right: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  .category-name {
+    color: var(--text-primary);
+    flex: 1;
+  }
+  
+  .category-count {
+    background-color: var(--background-primary);
+    color: var(--text-secondary);
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
   }
 `;
 
@@ -217,120 +363,6 @@ const AddButton = styled.button`
     color: var(--accent-light);
     background-color: transparent;
     transform: scale(1.1);
-  }
-`;
-
-const NavMenu = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-`;
-
-const NavItem = styled.li`
-  margin-bottom: 0.25rem;
-`;
-
-const StyledNavLink = styled(NavLink)`
-  display: flex;
-  align-items: center;
-  padding: 0.8rem 1.5rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-  transition: all var(--transition-fast);
-  border-left: 3px solid transparent;
-  
-  &:hover {
-    background-color: var(--hover-background);
-    color: var(--text-primary);
-  }
-  
-  &.active {
-    background-color: var(--active-background);
-    color: var(--accent-color);
-    border-left: 3px solid var(--accent-color);
-  }
-`;
-
-const CategoryItem = styled.div<{ active: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.6rem 1.5rem;
-  color: ${(props) => props.active ? 'var(--accent-color)' : 'var(--text-secondary)'};
-  text-decoration: none;
-  transition: all var(--transition-fast);
-  cursor: pointer;
-  background-color: ${(props) => props.active ? 'var(--active-background)' : 'transparent'};
-  border-left: 3px solid ${(props) => props.active ? 'var(--accent-color)' : 'transparent'};
-  
-  &:hover {
-    background-color: var(--hover-background);
-    color: ${(props) => props.active ? 'var(--accent-color)' : 'var(--text-primary)'};
-  }
-`;
-
-const CategoryContent = styled.div`
-  display: flex;
-  align-items: center;
-`;
-
-const CategoryCount = styled.span<{ active: boolean }>`
-  background-color: ${props => props.active ? 'var(--accent-color)' : 'var(--background-primary)'};
-  color: ${props => props.active ? 'white' : 'var(--text-secondary)'};
-  font-size: 0.7rem;
-  padding: 0.15rem 0.5rem;
-  border-radius: 10px;
-  transition: all var(--transition-fast);
-`;
-
-const Icon = styled.span`
-  margin-right: 0.8rem;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  min-width: 1.1rem;
-`;
-
-const Text = styled.span`
-  font-size: 0.95rem;
-  font-weight: 500;
-`;
-
-const CategoryForm = styled.form`
-  padding: 0 1.5rem;
-  margin-top: 0.5rem;
-  margin-bottom: 1rem;
-  display: flex;
-`;
-
-const CategoryInput = styled.input`
-  flex: 1;
-  padding: 0.5rem 0.8rem;
-  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
-  border: 1px solid var(--border-color);
-  border-right: none;
-  background-color: var(--background-primary);
-  color: var(--text-primary);
-  
-  &:focus {
-    outline: none;
-    border-color: var(--accent-color);
-  }
-`;
-
-const AddCategoryButton = styled.button`
-  padding: 0 0.75rem;
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  background-color: var(--accent-color);
-  color: white;
-  transition: background-color var(--transition-fast);
-  
-  &:hover {
-    background-color: var(--accent-light);
-  }
-  
-  &:active {
-    background-color: var(--accent-dark);
   }
 `;
 
@@ -448,43 +480,38 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar, isMobile }) => 
         </SearchTypeSelect>
       </SearchContainer>
       
-      <NavMenu>
-        <NavItem>
-          <StyledNavLink to="/" onClick={handleNavClick}>
-            <Icon>
+      <NavSection>
+        <NavTitle>Navegação</NavTitle>
+        <NavList>
+          <NavItem>
+            <NavLink to="/" onClick={handleNavClick}>
               <FaHome />
-            </Icon>
-            <Text>Página Inicial</Text>
-          </StyledNavLink>
-        </NavItem>
-        
-        <NavItem>
-          <StyledNavLink to="/filtros" onClick={handleNavClick}>
-            <Icon>
+              <span>Página Inicial</span>
+            </NavLink>
+          </NavItem>
+          
+          <NavItem>
+            <NavLink to="/filtros" onClick={handleNavClick}>
               <FaFilter />
-            </Icon>
-            <Text>Filtros Avançados</Text>
-          </StyledNavLink>
-        </NavItem>
-        
-        <NavItem>
-          <StyledNavLink to="/dashboard" onClick={handleNavClick}>
-            <Icon>
+              <span>Filtros Avançados</span>
+            </NavLink>
+          </NavItem>
+          
+          <NavItem>
+            <NavLink to="/dashboard" onClick={handleNavClick}>
               <FaChartBar />
-            </Icon>
-            <Text>Dashboard</Text>
-          </StyledNavLink>
-        </NavItem>
-        
-        <NavItem>
-          <StyledNavLink to="/kanban" onClick={handleNavClick}>
-            <Icon>
+              <span>Dashboard</span>
+            </NavLink>
+          </NavItem>
+          
+          <NavItem>
+            <NavLink to="/kanban" onClick={handleNavClick}>
               <FaColumns />
-            </Icon>
-            <Text>Kanban</Text>
-          </StyledNavLink>
-        </NavItem>
-      </NavMenu>
+              <span>Kanban</span>
+            </NavLink>
+          </NavItem>
+        </NavList>
+      </NavSection>
       
       <SectionTitle>
         <span>Categorias</span>
@@ -494,60 +521,37 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, closeSidebar, isMobile }) => 
       </SectionTitle>
       
       {showCategoryForm && (
-        <CategoryForm onSubmit={handleCategorySubmit}>
-          <CategoryInput 
-            type="text" 
-            placeholder="Nova categoria" 
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            autoFocus
-          />
-          <AddCategoryButton type="submit">
-            <FaPlus />
-          </AddCategoryButton>
-        </CategoryForm>
-      )}
-      
-      <NavMenu>
-        <CategoryItem 
-          active={activeCategory === 'todas'} 
-          onClick={() => {
-            setActiveCategory('todas');
-            if (isMobile) closeSidebar();
-          }}
-        >
-          <CategoryContent>
-            <Icon>
-              <FaTags />
-            </Icon>
-            <Text>Todas</Text>
-          </CategoryContent>
-          <CategoryCount active={activeCategory === 'todas'}>
-            {todos.length}
-          </CategoryCount>
-        </CategoryItem>
-        
-        {categories.map((category) => (
+        <CategoryList>
           <CategoryItem 
-            key={category}
-            active={activeCategory === category}
+            color="var(--accent-color)"
+            active={activeCategory === 'todas'}
             onClick={() => {
-              setActiveCategory(category);
+              setActiveCategory('todas');
               if (isMobile) closeSidebar();
             }}
           >
-            <CategoryContent>
-              <Icon>
-                <FaTags />
-              </Icon>
-              <Text>{category}</Text>
-            </CategoryContent>
-            <CategoryCount active={activeCategory === category}>
-              {getCategoryCount(category)}
-            </CategoryCount>
+            <div className="category-color"></div>
+            <div className="category-name">Todas</div>
+            <div className="category-count">{todos.length}</div>
           </CategoryItem>
-        ))}
-      </NavMenu>
+          
+          {categories.map((category) => (
+            <CategoryItem 
+              key={category}
+              color="var(--accent-color)"
+              active={activeCategory === category}
+              onClick={() => {
+                setActiveCategory(category);
+                if (isMobile) closeSidebar();
+              }}
+            >
+              <div className="category-color"></div>
+              <div className="category-name">{category}</div>
+              <div className="category-count">{getCategoryCount(category)}</div>
+            </CategoryItem>
+          ))}
+        </CategoryList>
+      )}
       
       <StatusContainer>
         <StatusItem>

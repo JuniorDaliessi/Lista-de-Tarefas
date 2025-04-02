@@ -18,11 +18,10 @@ interface TodoContainerProps {
 const TodoContainer = styled.div<TodoContainerProps & { isCompleting?: boolean; isDeleting?: boolean }>`
   background-color: var(--card-background);
   border-radius: var(--radius-md);
-  padding: 1.2rem;
-  margin-bottom: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
   box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal), 
-              opacity var(--transition-normal), border-left-color var(--transition-normal);
+  transition: all var(--transition-normal);
   animation: slideUp var(--transition-normal);
   border-left: 4px solid ${props => {
     switch(props.priority) {
@@ -32,6 +31,8 @@ const TodoContainer = styled.div<TodoContainerProps & { isCompleting?: boolean; 
       default: return 'var(--success-color)';
     }
   }};
+  position: relative;
+  overflow: hidden;
   
   ${props => props.isCompleting && `
     animation: completeTodo 0.5s ease-in-out;
@@ -46,8 +47,27 @@ const TodoContainer = styled.div<TodoContainerProps & { isCompleting?: boolean; 
     box-shadow: var(--shadow-md);
   }
   
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 60px;
+    height: 60px;
+    background-color: ${props => {
+      switch(props.priority) {
+        case 'alta': return 'rgba(239, 68, 68, 0.08)';
+        case 'média': return 'rgba(245, 158, 11, 0.08)';
+        case 'baixa': 
+        default: return 'rgba(16, 185, 129, 0.08)';
+      }
+    }};
+    border-radius: 0 var(--radius-md) 0 100%;
+    z-index: 0;
+  }
+  
   @media (max-width: 768px) {
-    padding: 1rem;
+    padding: 1.25rem;
   }
   
   @keyframes completeTodo {
@@ -55,8 +75,7 @@ const TodoContainer = styled.div<TodoContainerProps & { isCompleting?: boolean; 
       background-color: var(--card-background);
     }
     50% {
-      background-color: var(--success-color);
-      opacity: 0.8;
+      background-color: rgba(16, 185, 129, 0.2);
     }
     100% {
       background-color: var(--card-background);
@@ -79,7 +98,9 @@ const TodoHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 0.8rem;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
   
   @media (max-width: 480px) {
     flex-direction: column;
@@ -99,12 +120,13 @@ const TodoTitleWrapper = styled.div`
 
 const TodoTitle = styled.h3<{ completed: boolean }>`
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
+  font-weight: 600;
   color: var(--text-primary);
   text-decoration: ${(props) => (props.completed ? 'line-through' : 'none')};
   opacity: ${(props) => (props.completed ? 0.7 : 1)};
   word-break: break-word;
-  transition: opacity var(--transition-fast), color var(--transition-fast);
+  transition: all var(--transition-fast);
   cursor: pointer;
   
   &:hover {
@@ -113,21 +135,25 @@ const TodoTitle = styled.h3<{ completed: boolean }>`
 `;
 
 const TodoDescription = styled.p<{ completed: boolean }>`
-  margin: 0.5rem 0;
+  margin: 0.75rem 0;
   color: var(--text-secondary);
   font-size: 1rem;
   text-decoration: ${(props) => (props.completed ? 'line-through' : 'none')};
   opacity: ${(props) => (props.completed ? 0.7 : 1)};
-  line-height: 1.5;
+  line-height: 1.6;
   transition: opacity var(--transition-fast);
+  position: relative;
+  z-index: 1;
 `;
 
 const TodoMeta = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
-  margin-top: 1rem;
+  gap: 1rem;
+  margin-top: 1.25rem;
   font-size: 0.85rem;
+  position: relative;
+  z-index: 1;
   
   @media (max-width: 480px) {
     flex-direction: column;
@@ -139,7 +165,7 @@ const TodoMetaItem = styled.div`
   display: flex;
   align-items: center;
   color: var(--text-secondary);
-  gap: 0.3rem;
+  gap: 0.4rem;
   
   svg {
     color: var(--accent-color);
@@ -150,38 +176,40 @@ const TodoMetaItem = styled.div`
 const CategoryBadge = styled.span`
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.6rem;
-  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.75rem;
+  border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 600;
   background-color: var(--accent-color);
   color: white;
-  gap: 0.3rem;
-  transition: background-color var(--transition-fast);
+  gap: 0.4rem;
+  transition: all var(--transition-fast);
   
   &:hover {
     background-color: var(--accent-light);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
   }
 `;
 
 const PriorityBadge = styled.span<{ priority: string }>`
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.6rem;
-  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.75rem;
+  border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  gap: 0.3rem;
+  gap: 0.4rem;
   background-color: ${(props) => {
     switch (props.priority) {
       case 'alta':
-        return 'rgba(244, 67, 54, 0.15)';
+        return 'rgba(239, 68, 68, 0.15)';
       case 'média':
-        return 'rgba(255, 152, 0, 0.15)';
+        return 'rgba(245, 158, 11, 0.15)';
       case 'baixa':
       default:
-        return 'rgba(76, 175, 80, 0.15)';
+        return 'rgba(16, 185, 129, 0.15)';
     }
   }};
   color: ${(props) => {
@@ -195,76 +223,51 @@ const PriorityBadge = styled.span<{ priority: string }>`
         return 'var(--success-color)';
     }
   }};
-`;
-
-const ProjectBadge = styled.span`
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.6rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 600;
-  background-color: var(--accent-light);
-  color: var(--accent-dark);
-  gap: 0.3rem;
-  transition: background-color var(--transition-fast);
+  transition: all var(--transition-fast);
   
   &:hover {
-    background-color: var(--accent-color);
-    color: white;
-    
-    .project-status {
-      background-color: rgba(255, 255, 255, 0.2);
-      color: white;
-      
-      .status-icon {
-        color: white;
-      }
-    }
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+`;
+
+const ProjectBadge = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 0.4rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: rgba(59, 130, 246, 0.15);
+  color: var(--accent-color);
+  gap: 0.3rem;
+  transition: all var(--transition-fast);
+  
+  div {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
   }
   
   .project-status {
-    display: inline-flex;
-    align-items: center;
-    margin-left: 0.3rem;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    border-left: 1px solid var(--border-color);
-    background-color: var(--background-primary);
-    color: var(--text-primary);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    margin-right: -0.4rem;
-    font-weight: 700;
-    position: relative;
-    box-shadow: inset 1px 0 3px rgba(0, 0, 0, 0.05);
-    
-    &:before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 3px;
-      height: 60%;
-      background-color: var(--border-color);
-      border-radius: 1px;
-    }
-    
-    svg {
-      margin-right: 0.3rem;
-      color: var(--text-primary);
-    }
-    
-    .status-icon {
-      color: var(--text-secondary);
-      transition: color var(--transition-fast);
-    }
+    padding-top: 0.2rem;
+    font-size: 0.7rem;
+    opacity: 0.9;
+    border-top: 1px dashed rgba(59, 130, 246, 0.3);
+  }
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+    background-color: rgba(59, 130, 246, 0.2);
   }
 `;
 
 const ActionButtons = styled.div`
   display: flex;
   gap: 0.5rem;
+  position: relative;
+  z-index: 1;
   
   @media (max-width: 480px) {
     width: 100%;
@@ -273,21 +276,20 @@ const ActionButtons = styled.div`
 `;
 
 const ActionButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
+  background-color: transparent;
+  color: var(--text-secondary);
+  padding: 0.5rem;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary);
-  padding: 0.4rem;
-  border-radius: var(--radius-sm);
-  transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast);
-
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+  
   &:hover {
     background-color: var(--hover-background);
-    color: var(--text-primary);
+    color: var(--accent-color);
     transform: translateY(-2px);
   }
   
@@ -296,41 +298,28 @@ const ActionButton = styled.button`
   }
 `;
 
-const CheckButton = styled.button<{ completed: boolean }>`
-  background-color: ${props => props.completed ? 'var(--success-color)' : 'transparent'};
-  color: ${props => props.completed ? 'white' : 'var(--text-secondary)'};
-  border: ${props => props.completed ? 'none' : '2px solid var(--border-color)'};
-  border-radius: 50%;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all var(--transition-fast);
+const DeleteButton = styled(ActionButton)`
+  &:hover {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: var(--error-color);
+  }
+`;
+
+const CompleteButton = styled(ActionButton)<{ completed: boolean }>`
+  ${props => props.completed && `
+    color: var(--success-color);
+    background-color: rgba(16, 185, 129, 0.15);
+  `}
   
   &:hover {
-    background-color: ${props => props.completed ? 'var(--success-color)' : 'var(--hover-background)'};
-    border-color: var(--accent-color);
-    transform: scale(1.1);
-  }
-  
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(79, 134, 247, 0.3);
+    background-color: rgba(16, 185, 129, 0.15);
+    color: var(--success-color);
   }
 `;
 
 const EditButton = styled(ActionButton)`
   &:hover {
-    color: var(--accent-color);
-  }
-`;
-
-const DeleteButton = styled(ActionButton)`
-  &:hover {
-    color: var(--error-color);
+    background-color: rgba(59, 130, 246, 0.15);
   }
 `;
 
@@ -674,7 +663,7 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
           </TodoTitle>
         </TodoTitleWrapper>
         <ActionButtons>
-          <CheckButton
+          <CompleteButton
             completed={todo.completed}
             onClick={handleToggleComplete}
             title={todo.completed ? 'Marcar como pendente' : 'Marcar como concluída'}
@@ -685,7 +674,7 @@ const TodoItem: React.FC<TodoItemProps> = ({ todo }) => {
             tabIndex={0}
           >
             <FaCheck />
-          </CheckButton>
+          </CompleteButton>
           <EditButton 
             onClick={() => handleSetEditing(true)} 
             title="Editar tarefa"

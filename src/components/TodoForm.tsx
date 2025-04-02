@@ -13,170 +13,97 @@ interface TodoFormProps {
 }
 
 const FormContainer = styled.form`
-  display: flex;
-  flex-direction: column;
   background-color: var(--card-background);
-  padding: 1.5rem;
   border-radius: var(--radius-md);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
   box-shadow: var(--shadow-md);
-  margin-bottom: 2rem;
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
-  animation: fadeIn var(--transition-normal);
-  border: 1px solid var(--border-color);
+  animation: slideUp var(--transition-normal);
+  border-top: 4px solid var(--accent-color);
+  position: relative;
+  overflow: hidden;
   
-  &:hover {
-    box-shadow: var(--shadow-lg);
-  }
-  
-  @media (max-width: 768px) {
-    padding: 1.2rem;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 80px;
+    height: 80px;
+    background-color: rgba(59, 130, 246, 0.08);
+    border-radius: 0 var(--radius-md) 0 100%;
+    z-index: 0;
   }
 `;
 
 const FormTitle = styled.h3`
-  margin: 0 0 1.2rem 0;
-  font-size: 1.2rem;
+  margin: 0 0 1.5rem 0;
   color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  
-  svg {
-    margin-right: 0.5rem;
-    color: var(--accent-color);
-  }
+  font-size: 1.25rem;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
 `;
 
 const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1.2rem;
-  
-  &:last-of-type {
-    margin-bottom: 1.5rem;
-  }
-`;
-
-const FormRow = styled.div`
-  display: flex;
-  gap: 1rem;
-  
-  @media (max-width: 640px) {
-    flex-direction: column;
-    gap: 1.2rem;
-  }
+  margin-bottom: 1.25rem;
+  position: relative;
+  z-index: 1;
 `;
 
 const Label = styled.label`
-  font-weight: 600;
+  display: block;
   margin-bottom: 0.5rem;
   color: var(--text-primary);
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  
-  svg {
-    margin-right: 0.4rem;
-    color: var(--accent-color);
-    font-size: 0.9rem;
-  }
-`;
-
-const InputGroup = styled.div`
-  position: relative;
-  flex: 1;
-`;
-
-const InputIcon = styled.span`
-  position: absolute;
-  left: 0.8rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  pointer-events: none;
-  
-  & + input {
-    padding-left: 2.5rem;
-  }
+  font-weight: 500;
+  font-size: 0.95rem;
 `;
 
 const Input = styled.input`
-  padding: 0.8rem;
-  border: 1px solid var(--border-color);
+  width: 100%;
+  padding: 0.8rem 1rem;
   border-radius: var(--radius-md);
-  font-size: 1rem;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  border: 1px solid var(--border-color);
   background-color: var(--background-primary);
   color: var(--text-primary);
-  width: 100%;
-
+  font-size: 0.95rem;
+  transition: all var(--transition-fast);
+  
   &:focus {
     outline: none;
     border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(79, 134, 247, 0.15);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px);
   }
   
-  @media (max-width: 480px) {
-    padding: 0.7rem;
-    font-size: 0.9rem;
+  &::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
   }
 `;
 
-const TextArea = styled.textarea`
-  padding: 0.8rem;
-  border: 1px solid var(--border-color);
+const Textarea = styled.textarea`
+  width: 100%;
+  padding: 0.8rem 1rem;
   border-radius: var(--radius-md);
-  font-size: 1rem;
-  min-height: 120px;
+  border: 1px solid var(--border-color);
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  min-height: 100px;
   resize: vertical;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-  background-color: var(--background-primary);
-  color: var(--text-primary);
-  width: 100%;
-
+  transition: all var(--transition-fast);
+  
   &:focus {
     outline: none;
     border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(79, 134, 247, 0.15);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px);
   }
   
-  @media (max-width: 480px) {
-    padding: 0.7rem;
-    font-size: 0.9rem;
-    min-height: 100px;
-  }
-`;
-
-const Select = styled.select`
-  padding: 0.8rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  font-size: 1rem;
-  background-color: var(--background-primary);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-  width: 100%;
-  
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 0.7rem center;
-  background-size: 1rem;
-  padding-right: 2.5rem;
-
-  &:focus {
-    outline: none;
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(79, 134, 247, 0.15);
-  }
-  
-  @media (max-width: 480px) {
-    padding: 0.7rem 2.5rem 0.7rem 0.7rem;
-    font-size: 0.9rem;
+  &::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
   }
 `;
 
@@ -184,28 +111,20 @@ const ButtonGroup = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  
-  @media (max-width: 480px) {
-    flex-direction: column-reverse;
-    gap: 0.8rem;
-  }
+  margin-top: 1.5rem;
+  position: relative;
+  z-index: 1;
 `;
 
 const Button = styled.button`
-  padding: 0.8rem 1.5rem;
-  border: none;
+  padding: 0.8rem 1.25rem;
   border-radius: var(--radius-md);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all var(--transition-fast);
   display: flex;
   align-items: center;
-  justify-content: center;
-  
-  svg {
-    margin-right: 0.5rem;
-  }
+  gap: 0.5rem;
   
   &:hover {
     transform: translateY(-2px);
@@ -215,10 +134,99 @@ const Button = styled.button`
   &:active {
     transform: translateY(0);
   }
+`;
+
+const PrimaryButton = styled(Button)`
+  background-color: var(--accent-color);
+  color: white;
   
-  @media (max-width: 480px) {
-    width: 100%;
-    padding: 0.7rem 1rem;
+  &:hover {
+    background-color: var(--accent-light);
+  }
+  
+  &:disabled {
+    background-color: var(--accent-light);
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+`;
+
+const SecondaryButton = styled(Button)`
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  
+  &:hover {
+    background-color: var(--hover-background);
+    color: var(--text-primary);
+  }
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  appearance: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+  
+  &:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px);
+  }
+`;
+
+const SelectWrapper = styled.div`
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--text-secondary);
+    border-bottom: 2px solid var(--text-secondary);
+    pointer-events: none;
+    transition: all var(--transition-fast);
+  }
+  
+  &:focus-within::after {
+    border-color: var(--accent-color);
+  }
+`;
+
+const CheckboxLabel = styled.label`
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  
+  input {
+    margin-right: 0.5rem;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-color);
+  }
+`;
+
+const FormColumns = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
   }
 `;
 
@@ -249,45 +257,6 @@ const SuccessMessage = styled.div`
   }
 `;
 
-const SubmitButton = styled(Button)`
-  background-color: var(--accent-color);
-  color: white;
-  
-  &:hover {
-    background-color: var(--accent-light);
-  }
-  
-  &:active {
-    background-color: var(--accent-dark);
-  }
-  
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(79, 134, 247, 0.3);
-  }
-  
-  &:disabled {
-    background-color: var(--border-color);
-    cursor: not-allowed;
-    transform: none !important;
-  }
-`;
-
-const CancelButton = styled(Button)`
-  background-color: var(--background-primary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  
-  &:hover {
-    background-color: var(--hover-background);
-  }
-  
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(79, 134, 247, 0.3);
-  }
-`;
-
 const SubtasksSection = styled.div`
   margin-top: 1rem;
   margin-bottom: 1.5rem;
@@ -295,6 +264,8 @@ const SubtasksSection = styled.div`
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   overflow: hidden;
+  position: relative;
+  z-index: 1;
 `;
 
 const SubtasksHeader = styled.div`
@@ -310,6 +281,7 @@ const SubtasksHeader = styled.div`
     font-size: 1rem;
     display: flex;
     align-items: center;
+    font-weight: 600;
     
     svg {
       margin-right: 0.5rem;
@@ -319,7 +291,7 @@ const SubtasksHeader = styled.div`
 `;
 
 const SubtasksList = styled.div`
-  padding: 0.5rem 1rem;
+  padding: 0.8rem 1rem;
   max-height: 200px;
   overflow-y: auto;
 `;
@@ -333,8 +305,9 @@ const SubtaskItem = styled.div<{ completed: boolean }>`
   
   span {
     flex: 1;
-    margin: 0 0.5rem;
+    margin: 0 0.75rem;
     text-decoration: ${props => props.completed ? 'line-through' : 'none'};
+    font-size: 0.95rem;
   }
   
   &:last-child {
@@ -362,34 +335,39 @@ const SubtaskDeleteButton = styled.button`
   align-items: center;
   justify-content: center;
   opacity: 0.7;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
   
   &:hover {
     opacity: 1;
+    background-color: rgba(239, 68, 68, 0.1);
+    transform: translateY(-1px);
   }
 `;
 
 const AddSubtaskForm = styled.div`
   display: flex;
-  padding: 0.5rem 1rem;
+  padding: 0.8rem 1rem;
   border-top: 1px solid var(--border-color);
   
   input {
     flex: 1;
-    padding: 0.5rem;
+    padding: 0.75rem 1rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md) 0 0 var(--radius-md);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     background-color: var(--background-primary);
     color: var(--text-primary);
     
     &:focus {
       outline: none;
       border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
   }
   
   button {
-    padding: 0.5rem 0.8rem;
+    padding: 0.75rem 1rem;
     background-color: var(--accent-color);
     color: white;
     border: none;
@@ -398,9 +376,10 @@ const AddSubtaskForm = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all var(--transition-fast);
     
     &:hover {
-      background-color: var(--accent-dark);
+      background-color: var(--accent-light);
     }
   }
 `;
@@ -623,7 +602,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel, projectId, colu
 
       <FormGroup>
         <Label htmlFor="description">Descrição</Label>
-        <TextArea
+        <Textarea
           id="description"
           value={description}
           onChange={handleDescriptionChange}
@@ -632,7 +611,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel, projectId, colu
         />
       </FormGroup>
 
-      <FormRow>
+      <FormColumns>
         <FormGroup>
           <Label htmlFor="date">
             <FaRegCalendarAlt aria-hidden="true" />
@@ -663,7 +642,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel, projectId, colu
             <option value="alta">Alta</option>
           </Select>
         </FormGroup>
-      </FormRow>
+      </FormColumns>
 
       <FormGroup>
         <Label htmlFor="category">
@@ -759,16 +738,16 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel, projectId, colu
 
       <ButtonGroup>
         {onCancel && (
-          <CancelButton 
+          <SecondaryButton 
             type="button" 
             onClick={onCancel}
             aria-label="Cancelar edição"
           >
             <FaTimes aria-hidden="true" />
             Cancelar
-          </CancelButton>
+          </SecondaryButton>
         )}
-        <SubmitButton 
+        <PrimaryButton 
           type="submit"
           disabled={isSubmitting}
           aria-busy={isSubmitting}
@@ -780,7 +759,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ editTodo, onCancel, projectId, colu
               ? 'Atualizar Tarefa' 
               : 'Adicionar Tarefa'
           }
-        </SubmitButton>
+        </PrimaryButton>
       </ButtonGroup>
     </FormContainer>
   );
